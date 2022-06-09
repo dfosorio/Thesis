@@ -1,6 +1,0 @@
-\contentsline {chapter}{\numberline {1}Introduction}{4}{}%
-\contentsline {chapter}{\numberline {2}Literature Review}{5}{}%
-\contentsline {chapter}{\numberline {3}Methodology}{6}{}%
-\contentsline {chapter}{\numberline {4}Results}{7}{}%
-\contentsline {chapter}{\numberline {5}Discussion}{8}{}%
-\contentsline {chapter}{\numberline {6}Conclusions}{9}{}%
