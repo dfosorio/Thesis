@@ -1,3 +1,3 @@
 # Thesis
 
-mi increible tesis :p
+my incredible thesis :) 
