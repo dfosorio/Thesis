@@ -1,3 +1,0 @@
-# Thesis
-
-my incredible thesis :) 
