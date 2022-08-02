@@ -86,9 +86,9 @@ for example, in the previous computation \texttt{red s(s(s(0))) + s(s(0))} the t
     \item $E = \texttt{N+s(M)=s(N + M)}$
     \item $t = \texttt{s(s(s(s(0))) + s(0))}$
     \item $\theta = \{\texttt{N} \mapsto \texttt{s(s(s(0)))},\texttt{M} \mapsto \texttt{0} \}$
-    \item $w = \texttt{N+s(M)}\theta = s(s(s(0))) + s(0)$
-    \item $w' = \texttt{s(N+M)}\theta = s(s(s(s(0))) + 0)$
-    \item $t' = s([w']) = s(s(s(s(s(0))) + 0))$
+    \item $w = \texttt{N+s(M)}\theta = \texttt{s(s(s(0))) + s(0)}$
+    \item $w' = \texttt{s(N+M)}\theta = \texttt{s(s(s(s(0))) + 0)}$
+    \item $t' = \texttt{s}([w']) = \texttt{s(s(s(s(s(0))) + 0))}$
 \end{itemize}
 the resulting term rewriting is $t \rightarrow_{\vv{E}} t'$.
 %explain the functional modules with rewriting rules
@@ -117,7 +117,7 @@ crl [$l$] : $t$ => $t'$ if $cond$ .
 to exemplify this, lets consider the following simple model of a bus: A transport bus has capacity for 60 people. The bus can be moving or stationary and can only drop or lift passengers when the bus is stationary. Finally, at any time the bus driver can use the brake to stop or use the gas pedal to move. The corresponding Maude system module for this model is:
 \begin{lstlisting}
 mod BUS is protecting NAT .
-  sorts Bus Status.
+  sorts Bus Status .
 
   op bus : Nat Status -> Bus [ctor] .
   ops stationary moving : -> Status [ctor] .
@@ -127,20 +127,71 @@ mod BUS is protecting NAT .
   *** move the bus
   rl [move] : bus(N,stationary) => bus(N,moving) .
   *** stop the bus 
-  rl [stop] : bus(N,moving) => bus(N,stop) .
-  *** lift passenger
-  crl [lift] : bus(N,stationary) => bus(N + 1,stationary) 
-                                    if N + 1 >= 60 . 
+  rl [stop] : bus(N,moving) => bus(N,stationary) .
   *** drop passenger
-  crl [drop] : bus(N,stationary) => bus(N - 1,stationary) 
-                                    if N - 1 >= 0 .
+  rl [drop] : bus(s(N),stationary) => bus(N,stationary) .
+  *** lift passenger
+  crl [lift] : bus(N,stationary) => bus(s(N),stationary) 
+                                    if s(N) <= 60 . 
 endm
 \end{lstlisting}
 %explain how the maude model corresponds to the theory
+In this model the states of the system are represented with instances of the sort \texttt{Bus}, and it contains a natural number that represents the number of people inside the bus and a \texttt{Status}, which represents the state of the bus (it can be stationary or moving). In this case, no equations are used, therefore the set of equations $E = \emptyset$  and $\Sigma$ will contain the sorts \texttt{Bus} and \texttt{Status} with their respective operators. To model the different events in the model, 4 rewriting rules were used:
+\begin{itemize}
+    \item An unconditional rule labeled \texttt{move}, that represents the event of using the gas pedal to move the bus by changing the status from \texttt{stationary} to \texttt{moving}. Note that this rule can only be applied when the bus is \texttt{stationary}, as stated by the rule first term \texttt{bus(N,stationary)}.
+    \item An unconditional rule labeled \texttt{stop}, that represents the event of using the brakes to stop the bus. This changes the status of the bus from \texttt{moving} to \texttt{stationary}. As the previous rule, it can only be applied when the first term is matched, i.e. when the bus status is \texttt{moving}. 
+    \item An unconditional rule labeled \texttt{drop}, that represents the event of dropping people off the bus. The subterm \texttt{s(N)} assures that the it can only drop a person when the number of people in one or more. This rule rewrites the state of the system, by reducing the number of passengers in the bus by one.
+    \item A conditional rule labeled \texttt{lift}, that represents the event of lifting a passenger. When this rules is applied, the number of passengers inside the bus is increased by one. To prevent exceeding the maximum capacity of the bus, the condition \texttt{if s(N) <= 60} is used. 
+\end{itemize}
+With this system module, that represents a rewrite theory $\mathscr{R}$, the simple bus model can be specified and verified using other functionalities in Maude like model checking with the commands \texttt{rew} and \texttt{search}.
 
 
+\section{PMaude}
+%acknowledge the PMaude paper
+%explain what PMaude is (probably use the thesis proposal)
+Probabilistic Maude or PMaude \cite{Agha2006}, is a Maude extension that introduces probabilities to the language. The underlying theory behind PMaude are  \textit{probabilistic rewrite theories} which correspond to an extension of rewrite theories: probabilistic rewrite theories can be expressed as tuple $\mathscr{R}_p = (\Sigma, E, L, R, \pi)$, where $(\Sigma, E, L, R,)$ is a rewrite theory and $\pi$ is a function that assigns to each rewrite rule $r \in R$ a probability, given the current model state or configuration. This probability will determine if a rule may or may not be executed in the following system transition. The general form of probabilistic rewrite rules, for unconditional and conditional respectively is:
+\begin{align*}
+    l &: t(\overrightarrow{x}) \rightarrow t'(\overrightarrow{x}, \overrightarrow{y}) \; \text{if} \; C(\overrightarrow{x}) \; \textbf{with probability} \; \overrightarrow{y} := \pi_r(\overrightarrow{y}) \\
+    l' &: t(\overrightarrow{x}) \rightarrow t'(\overrightarrow{x}, \overrightarrow{y}) \; \textbf{with probability} \; \overrightarrow{y} := \pi_r(\overrightarrow{y})  
+\end{align*}
+Where $\overrightarrow{x}$ is the set of variables of the current model state,  $\overrightarrow{y}$ is the set of new variables accessible in the following model state and $C(\overrightarrow{x})$ is the conjunction of conditions over the set $\overrightarrow{x}$. Moreover, $l, l'$ are labels in $L$, $t,t'$ are terms written with $\Sigma$ and $\pi_r$ corresponds to the probability function assigned to the specific rule $r \in R$. 
+%provide the clock example and explain it
+Lets consider the PMaude module, presented in \cite{Agha2006}: 
+\begin{lstlisting}[mathescape=true]
+pmod EXPONENTIAL-CLOCK is
+  *** the following imports positive real number module
+  protecting POSREAL .
 
-\section{Probabilistic Maude (PMaude)}
+  *** the following imports PMaude module that defines 
+  *** the distributions EXPONENTIAL, BERNOULLI, GAMMA, etc.
+  protecting PMAUDE .
+
+  *** declare a sort Clock
+  sort Clock .
+  *** declare a constructor operator for Clock
+  op clock : PosReal PosReal => Clock .
+  *** declares a constructor operator for a broken clock
+  op broken : PosReal PosReal => Clock .
+
+  *** T is used to represent time of clock,
+  *** C represents charge in the clocks battery,
+  *** t represents time increment of the clock
+  vars T C t : PosReal . var B : Bool .
+  
+  rl [advance]: clock(T,C) =>
+                      if B then
+                           clock(T+t,C - $\frac{\text{C}}{1000}$)
+                      else
+                           broken(T,C - $\frac{\text{C}}{1000}$)
+                      fi
+                with probability B:=BERNOULLI($\frac{\text{C}}{1000}$) 
+                                and 
+                                t:=EXPONENTIAL(1.0).
+                
+  rl [reset]: clock(T,C) => clock(0.0,C) .
+endpm
+\end{lstlisting}
+This model represents a clock that works with a battery. The idea is to model the behavior of the clock, when the battery starts depleting: when the charge of the battery is high, then the probability that the clock breaks is low. Conversely, when the clock's battery is low, the clock has a higher probability of breaking. In this probabilistic system module, the clock is represented as a term \texttt{clock(T,C)}, where \texttt{T} is the time and \texttt{C} is the charge of the clock. The main probabilistic rewrite rule \texttt{advance} represents the "ticks" of the clock. If the boolean value \texttt{B} is true, then the clocks ticks normally and the new time will be the current time \texttt{T} plus a increment \texttt{t}. Also, the charge of the clock will be reduced by a thousandth of the currents clock's charge. If \texttt{B} is false, then the clock will break, by changing to the state \texttt{broken(T,C - $\frac{\texttt{C}}{1000}$)}. The value \texttt{B} is distributed according to the Bernoulli distribution with mean $\frac{\texttt{C}}{1000}$. Therefore, it probabilistically depends on the amount of charge left in the battery, and the model encapsulates the system properties expressed previously.     
 
 \section{PVeStA}
 
