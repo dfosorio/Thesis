@@ -1,0 +1,7 @@
+Maude Section :
+
+\begin{enumerate}
+    \item As declarative programs, to solve specific problems.
+    \item As formal executable specifications, that specify a mathematical model of a system.
+    \item As a verification tool of formal requirements that a model should satisfy. 
+\end{enumerate}

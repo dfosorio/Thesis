@@ -1,0 +1,159 @@
+\chapter{Literature Review}
+The main purpose of this chapter is to present the needed theoretical and technical background to understand how the plugin works. Therefore, a short but sufficient definition of various concepts and tools will be given. In terms of theoretical context, this chapter will discuss topics like  Event-B, Maude and the rewriting logic approach to Event-B. Furthermore, this chapter will also provide some insight into plugin development in Rodin. To guide the reader through the different sections of this chapter and facilitate its reading, the following section dependency is given:
+
+%insert image of section dependencies
+
+
+\section{Event-B}
+
+\section{Probabilistic Event-B}
+
+\section{Maude}
+%Main sources for this chapter: PeterMaude, Lecture1, Lecture3
+
+%explain the generality of Maude
+Maude is a high performance declarative language, that allows the specification of programs or systems, and their formal verification \cite{MaudeManual, Lecture1, PeterMaude}.
+%explain how Maude program are written in functional module (sorts, subsorts, ops, etc, equations and equation evaluation)
+Maude programs are represented as \textit{functional modules} declared with syntax:
+\begin{lstlisting}
+fmod MODULENAME is
+    BODY
+endfm
+\end{lstlisting}
+where \textit{MODULENAME} is the name of the functional module, and \textit{BODY} is a set of declarations that specify the program. The body of the module contains \textit{sorts} (written in Maude as \texttt{sorts}), where each sort correspond to an specific data type of the program. It also contains a set of function symbols or function declarations called \textit{operators} (abbreviated as \texttt{op} in Maude), that specify the constructors of the different sorts, along with the syntax of the program functions. Finally, a set of \textit{equations} (abbreviated as \texttt{eq} in Maude) is used to define the behavior of the functions. These equations use \textit{variables} (abbreviated as \texttt{var} in Maude) to describe how each function works. 
+
+%provide an example of a maude program functional module
+To illustrate how a Maude program is contructed, the following code corresponds to a program that defines the natural numbers and the addition operation, borrowed from \cite{PeterMaude}: 
+\begin{lstlisting}
+fmod NAT-ADD is
+  sort Nat .
+
+  op 0 : -> Nat [ctor] .
+  op s : Nat -> Nat [ctor] .
+  op _+_ : Nat Nat -> Nat .
+
+  vars N M : Nat .
+    
+  *** Recursive Definition for addition
+  eq N + 0 = N .
+  eq N + s(M) = s(N + M) .
+endfm
+\end{lstlisting}
+The sort \texttt{Nat} is a data type that represents the natural numbers. This sort has two constructors (represented in the code with the key word \texttt{ctor}): 0 which is a constant and the operator \texttt{s}, which takes one argument of type \texttt{Nat} and represents the successor function in the natural numbers. With these two operators, it is possible to define arithmetic functions in the natural numbers, like addition or multiplication. In this module, both functions are defined inductively using equations. Using this module, it is possible to compute the value for addition or multiplication for two natural numbers using the command \texttt{red}. For example, if the command \texttt{red s(s(s(0))) + s(s(0))} is used, that represents the operation 3 + 2, the answer 5 is obtained represented as \texttt{s(s(s(s(s(0)))))}:
+\begin{lstlisting}
+*********** equation
+eq N + s(M) = s(N + M) .
+N --> s(s(s(0)))
+M --> s(0)
+s(s(s(0))) + s(s(0))
+--->
+s(s(s(s(0))) + s(0))
+*********** equation
+eq N + s(M) = s(N + M) .
+N --> s(s(s(0)))
+M --> 0
+s(s(s(0))) + s(0)
+--->
+s(s(s(s(0))) + 0)
+*********** equation
+eq N + 0 = N .
+N --> s(s(s(0)))
+s(s(s(0))) + 0
+--->
+s(s(s(0)))
+result Nat: s(s(s(s(s(0)))))
+\end{lstlisting}
+Maude computes using equations from left to right. Therefore computation steps like the first one, the expression \texttt{s(s(s(0))) + s(s(0))} is matched with the left side of the equation \texttt{N + s(M) = s(N + M)} and matching substitution $\{\texttt{N} \mapsto \texttt{s(s(s(0)))},\texttt{M} \mapsto \texttt{s(0)} \}$. The resulting expression \texttt{s(s(s(0))) + s(s(0))}, will be simplified again with the same equation, until it reduces to a simplified expression that can be matched with the equation \texttt{N + 0 = N} (as seen in the last step).
+
+%explain the semantics behind the functional modules
+Semantically, functional modules in Maude are represented as \textit{equational theories} \cite{Lecture1,PeterMaude}, that are represented as a pair $(\Sigma, E)$ where: 
+\begin{itemize}
+    \item the \textit{signature} $\Sigma$ describes the syntax of the theory, which is the data types and operators symbols (sorts and operators).
+    \item $E$ is the set of equations between expressions written in the syntax of $\Sigma$.
+\end{itemize}
+As mentioned before, computations in Maude are done by using the equations over expressions constructed with operators. This method is called \textit{term rewriting} \cite{Lecture1,PeterMaude} and behaves in the following way: 
+
+\begin{itemize}
+    \item With the equations $E$ of $(\Sigma, E)$, \textit{term rewriting rules} are defined as $\vv{E} = \{u \rightarrow v  \ | \ (u = v) \in E \}$. 
+    \item A term $t$, which are expressions formed using the syntax in $\Sigma$, is rewritten to $t'$ in one step $t \rightarrow_{\vv{E}} t'$ if and only if, the following conditions are suffice:
+        \begin{itemize}
+            \item there is a subterm $w$ in $t$, expressed as $t[w]$.
+            \item there is a rule $(u \rightarrow v) \in \vv{E}$ and a substituon $\theta$ s.t. : $w = u\theta$, $w' = v\theta$, $t'=t[w']=t[v\theta]$.   
+        \end{itemize}
+\end{itemize}
+for example, in the previous computation \texttt{red s(s(s(0))) + s(s(0))} the term rewriting process in the second step, is the following:
+\begin{itemize}
+    \item $E = \texttt{N+s(M)=s(N + M)}$
+    \item $t = \texttt{s(s(s(s(0))) + s(0))}$
+    \item $\theta = \{\texttt{N} \mapsto \texttt{s(s(s(0)))},\texttt{M} \mapsto \texttt{0} \}$
+    \item $w = \texttt{N+s(M)}\theta = s(s(s(0))) + s(0)$
+    \item $w' = \texttt{s(N+M)}\theta = s(s(s(s(0))) + 0)$
+    \item $t' = s([w']) = s(s(s(s(s(0))) + 0))$
+\end{itemize}
+the resulting term rewriting is $t \rightarrow_{\vv{E}} t'$.
+%explain the functional modules with rewriting rules
+%explain theory behind it
+Aside from building programs in Maude using functional modules, it is also possible to model concurrent systems. This is done with \textit{system modules}, which permits the construction of system states and transitions. Semantically, a system module is a \textit{rewrite theory} $\mathscr{R} = (\Sigma, E, L, R)$ where: 
+\begin{itemize}
+    \item $(\Sigma, E)$ is an equational theory.
+    \item $L$ is a set of labels.
+    \item $R$ is a set of unconditional labeled rewrite rules of the form $l: t \rightarrow t'$, and conditional labeled rewrite rules fo the form $l: t \rightarrow t' \ \text{if} \ cond$, where $l \in L$, $t,t'$ are terms in $\Sigma$ and $cond$ is a condition or system guard.    
+\end{itemize}
+The syntax for system modules in Maude is:
+\begin{lstlisting}
+mod MODULENAME is
+    BODY
+endm
+\end{lstlisting}
+Where the body represents a rewrite theory $\mathscr{R}$. The syntax for unconditional rewriting rules is
+\begin{lstlisting}[mathescape=true]
+rl [$l$] : $t$ => $t'$ .
+\end{lstlisting}
+and for conditional rewriting rules is
+\begin{lstlisting}[mathescape=true]
+crl [$l$] : $t$ => $t'$ if $cond$ .
+\end{lstlisting}
+%provide an example of a model
+to exemplify this, lets consider the following simple model of a bus: A transport bus has capacity for 60 people. The bus can be moving or stationary and can only drop or lift passengers when the bus is stationary. Finally, at any time the bus driver can use the brake to stop or use the gas pedal to move. The corresponding Maude system module for this model is:
+\begin{lstlisting}
+mod BUS is protecting NAT .
+  sorts Bus Status.
+
+  op bus : Nat Status -> Bus [ctor] .
+  ops stationary moving : -> Status [ctor] .
+ 
+  vars N M : Nat . var S : Status .
+
+  *** move the bus
+  rl [move] : bus(N,stationary) => bus(N,moving) .
+  *** stop the bus 
+  rl [stop] : bus(N,moving) => bus(N,stop) .
+  *** lift passenger
+  crl [lift] : bus(N,stationary) => bus(N + 1,stationary) 
+                                    if N + 1 >= 60 . 
+  *** drop passenger
+  crl [drop] : bus(N,stationary) => bus(N - 1,stationary) 
+                                    if N - 1 >= 0 .
+endm
+\end{lstlisting}
+%explain how the maude model corresponds to the theory
+
+
+
+\section{Probabilistic Maude (PMaude)}
+
+\section{PVeStA}
+
+\section{A Rewriting Logic Semantics and Statistical Analysis for Probabilistic Event-B}
+
+\section{Rodin and Plugin Development}
+
+
+
+
+
+
+
+
+
+
