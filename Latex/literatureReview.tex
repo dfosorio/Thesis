@@ -93,7 +93,7 @@ for example, in the previous computation \texttt{red s(s(s(0))) + s(s(0))} the t
 the resulting term rewriting is $t \rightarrow_{\vv{E}} t'$.
 %explain the functional modules with rewriting rules
 %explain theory behind it
-Aside from building programs in Maude using functional modules, it is also possible to model concurrent systems. This is done with \textit{system modules}, which permits the construction of system states and transitions. Semantically, a system module is a \textit{rewrite theory} $\mathscr{R} = (\Sigma, E, L, R)$ where: 
+Aside from building programs in Maude using functional modules, it is also possible to model concurrent systems. This is done with \textit{system modules}, which permits the construction of system states and transitions. Semantically, a system module is a \textit{rewrite theory} \cite{PeterMaude,Lecture3} $\mathscr{R} = (\Sigma, E, L, R)$ where: 
 \begin{itemize}
     \item $(\Sigma, E)$ is an equational theory.
     \item $L$ is a set of labels.
@@ -143,7 +143,11 @@ In this model the states of the system are represented with instances of the sor
     \item An unconditional rule labeled \texttt{drop}, that represents the event of dropping people off the bus. The subterm \texttt{s(N)} assures that the it can only drop a person when the number of people in one or more. This rule rewrites the state of the system, by reducing the number of passengers in the bus by one.
     \item A conditional rule labeled \texttt{lift}, that represents the event of lifting a passenger. When this rules is applied, the number of passengers inside the bus is increased by one. To prevent exceeding the maximum capacity of the bus, the condition \texttt{if s(N) <= 60} is used. 
 \end{itemize}
-With this system module, that represents a rewrite theory $\mathscr{R}$, the simple bus model can be specified and verified using other functionalities in Maude like model checking with the commands \texttt{rew} and \texttt{search}.
+With this system module, that represents a rewrite theory $\mathscr{R}$, the simple bus model can be specified and verified using other functionalities in Maude like model checking with the commands \texttt{rew} and \texttt{search} \cite{MaudeManual}.
+
+
+\section{Object-Based Programming in Maude}
+
 
 
 \section{PMaude}
@@ -191,9 +195,67 @@ pmod EXPONENTIAL-CLOCK is
   rl [reset]: clock(T,C) => clock(0.0,C) .
 endpm
 \end{lstlisting}
-This model represents a clock that works with a battery. The idea is to model the behavior of the clock, when the battery starts depleting: when the charge of the battery is high, then the probability that the clock breaks is low. Conversely, when the clock's battery is low, the clock has a higher probability of breaking. In this probabilistic system module, the clock is represented as a term \texttt{clock(T,C)}, where \texttt{T} is the time and \texttt{C} is the charge of the clock. The main probabilistic rewrite rule \texttt{advance} represents the "ticks" of the clock. If the boolean value \texttt{B} is true, then the clocks ticks normally and the new time will be the current time \texttt{T} plus a increment \texttt{t}. Also, the charge of the clock will be reduced by a thousandth of the currents clock's charge. If \texttt{B} is false, then the clock will break, by changing to the state \texttt{broken(T,C - $\frac{\texttt{C}}{1000}$)}. The value \texttt{B} is distributed according to the Bernoulli distribution with mean $\frac{\texttt{C}}{1000}$. Therefore, it probabilistically depends on the amount of charge left in the battery, and the model encapsulates the system properties expressed previously.     
+This model represents a clock that works with a battery. The idea is to model the behavior of the clock, when the battery starts depleting: when the charge of the battery is high, then the probability that the clock breaks is low. Conversely, when the clock's battery is low, the clock has a higher probability of breaking. In this probabilistic system module, the clock is represented as a term \texttt{clock(T,C)}, where \texttt{T} is the time and \texttt{C} is the charge of the clock. The main probabilistic rewrite rule \texttt{advance} represents the "ticks" of the clock. If the boolean value \texttt{B} is true, then the clocks ticks normally and the new time will be the current time \texttt{T} plus an increment \texttt{t}. Also, the charge of the clock will be reduced by a thousandth of the currents clock's charge. If \texttt{B} is false, then the clock will break and change to the state \texttt{broken(T,C - $\frac{\texttt{C}}{1000}$)}. The constructor \texttt{broken} of sort \texttt{Clock}, represents the broken state of the clock. To incorporate the probabilistic choice of event for the clock's state (either ticking or breaking), the value \texttt{B} is chosen probabilistically, based on the charge of the clock. This is done by the \texttt{BERNOULLI} function, which receives a float number and returns a boolean value that is distributed according to the Bernoulli distribution with mean $\frac{\texttt{C}}{1000}$. Therefore, the lesser the charge left in the battery, the greater is the probability that the clock will break. The value \texttt{t} is also probabilistically determined, in this case by a exponential distribution function.
+There is also a second rewriting rule, that resets the clock to its initial state \texttt{clock(0.0, C)}. It is important to remark that this model has both probabilistic and non-deterministic choice: The state of the clock depends on a probability function but the choice of rewriting rules is done non-dereministically by Maude's fair scheduler.
+
+PMaude modules can be transformed into regular system modules in Maude. This is done with three key modules: \texttt{COUNTER}, \texttt{RANDOM} and \texttt{SAMPLER}. The built-in \texttt{COUNTER} module in Maude consists of the rewriting rule
+\begin{lstlisting}
+rl counter => N:Nat .
+\end{lstlisting}
+that rewrites the constant counter to a natural number. The module is built to guarantee that every time the constant counter is replaced with a natural number \texttt{N}, this natural number corresponds to the successor of the natural number obtained in the previous use of the rule. The built-in \texttt{RANDOM} module provides a random number generator function, called \texttt{random}. Lastly, the \texttt{SAMPLER} module specifies the sampling functions for different probability functions. For example, for the previous clock example, the needed functions will be:
+\begin{lstlisting}
+op EXPONENTIAL : PosReal => PosReal .
+op BERNOULLI : PosReal => Bool .
+\end{lstlisting}
+that are defined as:
+\begin{lstlisting}
+rl EXPONENTIAL(R) => (- log(rand)) / R .
+rl BERNOULLI(R) => if rand < R then true else false fi .
+\end{lstlisting}
+The value \texttt{rand} in both of the rules is defined as:
+\begin{lstlisting}
+rl [rnd] : rand => float(random(counter + 1) / 4294967296) .
+\end{lstlisting}
+and it is rewritten in each step to a random number between 0 and 1. The number 4294967296 is used to divide the number returned by \texttt{random}, since it is the maximum number the function can return. The resulting Maude system module \cite{Agha2006} is:
+\begin{lstlisting}[mathescape=true]
+mod EXPONENTIAL-CLOCK-TRANSFORMED is 
+  *** The SAMPLER mode includes the COUNTER and RANDOM modules
+  protecting SAMPLER .
+  protecting POSREAL .
+  
+  sort Clock . 
+  op clock : Nat Float -> Clock [ctor] . 
+  op broken : Nat Float -> Clock [ctor] . 
+  
+  vars T C : PosReal . 
+  
+  rl clock(T,C) => if BERNOULLI($\frac{\text{C}}{1000}$) then 
+                        clock(T + EXPONENTIAL(1.0), C - $\frac{\text{C}}{1000}$) 
+                   else 
+                        broken(T,C - $\frac{\text{C}}{1000}$)
+                   fi .
+  
+  rl [reset]: clock(T,C) => clock(0.0,C) .
+endm
+\end{lstlisting}
 
 \section{PVeStA}
+%explain what is pvesta
+PVeStA \cite{AlTurki2011} is a statistical model checking tool for probabilistic-real time systems, that are specified either as discrete or continuous Markov chains, or probabilistic rewrite theories in Maude. It permits the verification of properties expressed in quantitative temporal logics like QuaTex \cite{Agha2006} using Monte Carlo simulations.
+%exlpain how to it works (version of Maude, files, process to verify a PMaude model)
+PVeStA is implemented in Java and consists of two executable programs: a client \texttt{pvesta-client} and a server \texttt{pvesta-server}. The \texttt{pvesta-client} program takes as input the Maude probabilistic model, a list of formulas written in QuaTex, multiple execution parameters for the model checking simulation and a server list. Then it sends to every one of the running \texttt{pvesta-servers} (PVeStA's model checking supports parallelism) a simulation request for the specified probabilistic Maue model and QuaTex formulas. After that, the servers return the results back to the \texttt{pvesta-client} program. This previously explained process can be viewed in the following figure:
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale = 0.3]{images/pvesta.PNG}
+    \caption{Components and interactions of PVeStA, taken from \cite{AlTurki2011}}
+    \label{fig:pvesta}
+\end{figure}
+To demonstrate how PVeStA works, a variation of the clock model shown in the previous section will be used. 
+
+
+
+
+
 
 \section{A Rewriting Logic Semantics and Statistical Analysis for Probabilistic Event-B}
 
