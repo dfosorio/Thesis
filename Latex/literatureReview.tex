@@ -12,7 +12,7 @@ The main purpose of this chapter is to present the needed theoretical and techni
 %Main sources for this chapter: PeterMaude, Lecture1, Lecture3
 
 %explain the generality of Maude
-Maude is a high performance declarative language, that allows the specification of programs or systems, and their formal verification \cite{MaudeManual, Lecture1, PeterMaude}.
+Maude \cite{MaudeManual, Lecture1, PeterMaude} is a high performance declarative language, that allows the specification of programs or systems, and their formal verification.
 %explain how Maude program are written in functional module (sorts, subsorts, ops, etc, equations and equation evaluation)
 Maude programs are represented as \textit{functional modules} declared with syntax:
 \begin{lstlisting}
@@ -146,9 +146,71 @@ In this model the states of the system are represented with instances of the sor
 With this system module, that represents a rewrite theory $\mathscr{R}$, the simple bus model can be specified and verified using other functionalities in Maude like model checking with the commands \texttt{rew} and \texttt{search} \cite{MaudeManual}.
 
 
-\section{Object-Based Programming in Maude}
+\section{Object-Based Programming}
+Object-based programming in Maude \cite{MaudeManual, Lecture3, PeterMaude} is supported by a predefined module \texttt{CONFIGURATION}. This module contains the necessary sorts and syntax to define the objects, messages, system configurations and objects interactions with rewriting rules, of an object-based system. This module is defined as :
+\begin{lstlisting}
+mod CONFIGURATION is
+  *** basic object system sorts
+  sorts Object Msg Configuration .
+  *** construction of configurations
+  subsort Object Msg < Configuration .
+  op none : -> Configuration [ctor] .
+  op __ : Configuration Configuration -> Configuration
+[ctor config assoc comm id: none] .
+\end{lstlisting}
 
+The basic sorts are \texttt{Object}, \texttt{Msg} and \texttt{Configuration}. A term of sort \texttt{Object} represents an instance of a system object, a term of sort \texttt{Msg} represents a message shared by the system objects and a term of sort \texttt{Configuration} represents a snapshot of the current system state, represented as a multiset of objects and messages. These configurations are built with the multiset union operation (defined with syntax \texttt{\_\,\_} ) between objects, messages or other configurations, and the empty configuration is defined as \texttt{none}. The module configuration also implements a predefined syntax for object construction. They have the form:
+\begin{align*}
+    \langle O : C \ | \ a_1:v_1,...a_n:v_n \rangle
+\end{align*}
+Where $O$ is the objects identifier, $C$ is its class, $a_1...a_n$ are attribute identifiers and $v_1...v_n$ are the values of each one of the attributes. This defined syntax in Maude is implemented as:
+\begin{lstlisting}
+  *** Maude object syntax
+  sorts Oid Cid .
+  sorts Attribute AttributeSet .
+  subsort Attribute < AttributeSet .
+  op none : -> AttributeSet [ctor] .
+  op _,_ : AttributeSet AttributeSet -> AttributeSet
+  [ctor assoc comm id: none] .
+  op <_:_|_> : Oid Cid AttributeSet -> Object [ctor object] .
+endm
+\end{lstlisting}
+Where \texttt{Oid} corresponds to the object identifier $O$, \texttt{Cid} is the class identifier $C$ and the attributes of the object are represented as a multiset. Messages' syntax is defined by the user. To understand how systems are modeled in Maude with configurations, the bank account example in \cite{MaudeManual} can be examined:
+%provide an example
+\begin{lstlisting}
+mod BANK-ACCOUNT is
+    protecting INT .
+    protecting CONFIGURATION .
+    op Account : -> Cid [ctor] .
+    op bal :_ : Int -> Attribute [ctor gather (&)] .
+    op from_to_transfer_ : Oid Oid Nat -> Msg [ctor] .
+    
+    vars A B : Oid .
+    vars M N L : Nat .
 
+    *** Definition of transfer rewriting rule
+    crl [transfer] :
+      (from A to B transfer M)
+      < A : Account | bal : N >
+      < B : Account | bal : L >
+      => < A : Account | bal : N - M >
+         < B : Account | bal : L + M >
+      if N >= M .
+
+    *** Definition of the initial configuration
+    op bankConf : -> Configuration .
+    ops A-001 A-002 : -> Oid .
+    eq bankConf
+    = < A-001 : Account | bal : 250 >
+      < A-002 : Account | bal : 1250 >
+      (from A-002 to A-001 transfer 300) .
+endm
+\end{lstlisting}
+The system consists of different bank accounts, that can transfer money with each other. The bank account class is named as \texttt{Account}, and it contains the attribute \texttt{bal} which corresponds to the amount of money available in an account. The message \texttt{from\_to\_transfer\_} simulates the transfer request from one account to another, by specifying the the two account object identifiers or Oid (one for the account that sends the money and the other one for the account that receives the money) and the amount of money ti be sent as an integer. The rewrite rule \texttt{transfer} matches a system configuration where the message \texttt{from A to B transfer M} and the two accounts with Oid \texttt{A} and \texttt{B} are present. After that, the rule modifies the attribute \texttt{bal} of both accounts according to the transaction parameters and erases the message from the configuration. For example, if the initial configuration of the system is the one defined by \texttt{bankConf}, the result after using the rewriting command \texttt{rew in BANK-ACCOUNT : bankConf .} would be:
+\begin{lstlisting}
+result Configuration: < A-001 : Account | bal : 550 > 
+                      < A-002 : Account | bal : 950 >
+\end{lstlisting}
 
 \section{PMaude}
 %acknowledge the PMaude paper
