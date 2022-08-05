@@ -5,6 +5,35 @@ The main purpose of this chapter is to present the needed theoretical and techni
 
 
 \section{Event-B}
+%explain what event B is generally
+Event-B \cite{Abrial2011,Butler2013} is a formal method for specifying and verifying properties about systems based on set theory and predicate logic. Specifications in Event-B are referred as models and they contain the mathematical development for a discrete transition system. The main components of an Event-B model are machines and contexts: machines contain the dynamic elements of the model, while contexts contain the static elements. Specifically, machines contain the system variables, invariants, theorems, variant and events. On the other hand, contexts contain carrier sets, constants, axioms and theorems. Both machines and contexts have different interactions between them. A machine can "see" one or several context, meaning that the machine includes the static elements specified in these contexts. Furthermore, machines can "refine" other machines, which means that if a machine $M_2$ refines a machine $M_1$, then $M_2$ can use all the dynamic elements specified in $M_1$ and also create new ones that respect the properties defined in $M_1$ (for example properties defined as invariants). This relation also occurs in the same way between contexts, when one context "extends" another one. Figure \ref{fig:eventb1} illustrates how machines and contexts interact: 
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale = 0.5]{images/eventb1.PNG}
+    \caption{Machine and context relationship, taken from \cite{Abrial2011}}
+    \label{fig:eventb1}
+\end{figure}
+%explain what a Context is and syntax 
+In terms of syntax, the general structure for contexts is the one expressed in \ref{fig:eventb2}, such that:
+\begin{itemize}
+    \item \textit{context\_identifier} is a string that identifies the context. The context identifier must be different to all the other components of the system (other machines or contexts).
+    \item The "extends" clause lists all the contexts identifiers that the current context is extending.
+    \item The clause "sets" takes a list of set identifiers. Each one of these set identifiers correspond to the name of one of the carrier sets of the model. A carrier set is a user defined set or type, that must be non-empty and 
+    \item The "constants" clause lists all the constants of the model.
+    \item The "axioms" clause introduces the list of axioms that the model must satisfy. Axioms are logic predicates of the form $A($
+\end{itemize}
+\begin{figure}[h]
+    \centering
+    \includegraphics[scale = 0.4]{images/eventb2.PNG}
+    \caption{Context structure, taken from \cite{Abrial2011}}
+    \label{fig:eventb2}
+\end{figure}
+
+%explain what a Machine is and syntax
+
+%provide a simple example
+
+%explain Event-B as a tuple M = (...)
 
 \section{Probabilistic Event-B}
 
@@ -143,11 +172,58 @@ In this model the states of the system are represented with instances of the sor
     \item An unconditional rule labeled \texttt{drop}, that represents the event of dropping people off the bus. The subterm \texttt{s(N)} assures that the it can only drop a person when the number of people in one or more. This rule rewrites the state of the system, by reducing the number of passengers in the bus by one.
     \item A conditional rule labeled \texttt{lift}, that represents the event of lifting a passenger. When this rules is applied, the number of passengers inside the bus is increased by one. To prevent exceeding the maximum capacity of the bus, the condition \texttt{if s(N) <= 60} is used. 
 \end{itemize}
-With this system module, that represents a rewrite theory $\mathscr{R}$, the simple bus model can be specified and verified using other functionalities in Maude like model checking with the commands \texttt{rew} and \texttt{search} \cite{MaudeManual}.
+With this system module, that represents a rewrite theory $\mathscr{R}$, the simple bus model can be specified and verified using other functionalities in Maude like model checking with the commands \texttt{rewrite} and \texttt{search}. The \texttt{rewrite} command or \texttt{rew} takes an initial state of the system and uses the rewriting rules until termination, i.e. until no other rewriting rule can be applied to the system state. In the case of the bus example, the rules \texttt{move} and \texttt{stop} can be applied infinitely. Therefore, to be able to simulate this system Maude also allows to use bounded rewriting. With this method it is possible to specify the number of rewriting rules to be applied to the initial state of the system. For example, the command \texttt{rew [3] bus(0, stationary) .} will apply 3 rewriting rules to to the state \texttt{bus(0, stationary)}, which refers to a stationary bus with no passengers. The resulting execution is:
+\begin{lstlisting}
+*********** rule
+rl bus(N, stationary) => bus(N, moving) [label move] .
 
+bus(0, stationary)
+--->
+bus(0, moving)
+*********** rule
+rl bus(N, moving) => bus(N, stationary) [label stop] .
 
+bus(0, moving)
+--->
+bus(0, stationary)
+*********** rule
+crl bus(N, stationary) => bus(s N, stationary) if s N <= 60 = true [label lift] .
+
+bus(0, stationary)
+--->
+bus(1, stationary)
+result Bus: bus(1, stationary)
+\end{lstlisting}
+Lastly, with the \texttt{search} command it is possible to verify if a given state is reachable. For example, to check if the state \texttt{bus(10,stationary)} can be reached from the initial state \texttt{bus(0,moving)}, the command \texttt{search bus(0,stationary) =>* bus(10, moving) .}  can be used. The result of this command is:
+\begin{lstlisting}
+search in BUS : bus(0, stationary) =>* bus(10, moving) .
+
+Solution 1 (state 21)
+states: 22  rewrites: 50 in 0ms cpu (0ms real) (~ rewrites/second)
+empty substitution
+
+No more solutions.
+\end{lstlisting}
+If the search returns a solution, it means that the state is reachable. Furthermore it is also possible to check if the system will exceed the maximum capacity defining an system invariant $I$ that states this property. This can be done, by adding the following code to the bus module:
+\begin{lstlisting}
+*** Define predicates
+  var X : Bus .
+  op predicate : Bus -> Bool .
+  eq predicate(bus(N,S)) = if N <= 60 then true else false fi .
+\end{lstlisting}
+This invariant can be checked with the \texttt{search} command using:
+\begin{lstlisting}
+search bus(0,stationary) =>* X  s.t. predicate(X) =/= true .
+\end{lstlisting}
+which searches for a state \texttt{X} where the bus has more than 60 passengers. The resulting execution of the command returns no solution:
+\begin{lstlisting}
+search in BUS : bus(0, stationary) =>* X such that predicate(X) =/= true = true .
+
+No solution.
+\end{lstlisting}
+This means that the bus system can not exceed the maximum capacity of the bus.
 \section{Object-Based Programming}
-Object-based programming in Maude \cite{MaudeManual, Lecture3, PeterMaude} is supported by a predefined module \texttt{CONFIGURATION}. This module contains the necessary sorts and syntax to define the objects, messages, system configurations and objects interactions with rewriting rules, of an object-based system. This module is defined as :
+Object-based programming in Maude \cite{MaudeManual, Lecture3, PeterMaude} is supported by a predefined module \texttt{CONFIGURATION}. This module contains the necessary sorts and syntax to define the objects, messages, system configurations and objects interactions, of an object-based system. This module is defined as:
 \begin{lstlisting}
 mod CONFIGURATION is
   *** basic object system sorts
@@ -206,7 +282,7 @@ mod BANK-ACCOUNT is
       (from A-002 to A-001 transfer 300) .
 endm
 \end{lstlisting}
-The system consists of different bank accounts, that can transfer money with each other. The bank account class is named as \texttt{Account}, and it contains the attribute \texttt{bal} which corresponds to the amount of money available in an account. The message \texttt{from\_to\_transfer\_} simulates the transfer request from one account to another, by specifying the the two account object identifiers or Oid (one for the account that sends the money and the other one for the account that receives the money) and the amount of money ti be sent as an integer. The rewrite rule \texttt{transfer} matches a system configuration where the message \texttt{from A to B transfer M} and the two accounts with Oid \texttt{A} and \texttt{B} are present. After that, the rule modifies the attribute \texttt{bal} of both accounts according to the transaction parameters and erases the message from the configuration. For example, if the initial configuration of the system is the one defined by \texttt{bankConf}, the result after using the rewriting command \texttt{rew in BANK-ACCOUNT : bankConf .} would be:
+The system consists of different bank accounts, that can transfer money to each other. The bank account class is named as \texttt{Account}, and it contains the attribute \texttt{bal} which corresponds to the amount of money available in an account. The message \texttt{from\_to\_transfer\_} simulates the transfer request from one account to another, by specifying the the two account object identifiers or Oid (one for the account that sends the money and the other one for the account that receives the money) and the amount of money to be sent as an integer. The rewrite rule \texttt{transfer} matches a system configuration where the message \texttt{from A to B transfer M} and the two accounts with Oid \texttt{A} and \texttt{B} are present. After that, the rule modifies the attribute \texttt{bal} of both accounts according to the transaction parameters and erases the message from the configuration. For example, if the initial configuration of the system is the one defined by \texttt{bankConf}, the result after using the rewriting command \texttt{rew in BANK-ACCOUNT : bankConf .} would be:
 \begin{lstlisting}
 result Configuration: < A-001 : Account | bal : 550 > 
                       < A-002 : Account | bal : 950 >
