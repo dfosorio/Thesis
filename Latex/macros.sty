@@ -3,12 +3,31 @@
 \usepackage{courier}
 \usepackage{listings}
 \usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage{esvect}
 \usepackage[parfill]{parskip} %avoid paragraph identation
 \usepackage{mathrsfs} %for the R in rewrite theory
 
 \usepackage{graphicx}
 \graphicspath{ {images/} }
+\usepackage{subfig}
+
+%--------------------------------------------
+%custom bullets
+%--------------------------------------------
+\newcommand\itema{\item[\textbf{R1.}]}
+\newcommand\itemb{\item[\textbf{R2.}]}
+\newcommand\itemc{\item[\textbf{R3.}]}
+\newcommand\itemd{\item[\textbf{R4.}]}
+\newcommand\iteme{\item[\textbf{R5.}]}
+%--------------------------------------------
+
+%--------------------------------------------
+%equal with a hat
+%--------------------------------------------
+\usepackage{scalerel,stackengine}
+\newcommand\equalhat{\mathrel{\stackon[1.5pt]{=}{\stretchto{%
+    \scalerel*[\widthof{=}]{\wedge}{\rule{1ex}{3ex}}}{0.5ex}}}}
 %-----------------------------------------
 
 %maude environment------------------------
