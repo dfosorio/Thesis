@@ -1,0 +1,26 @@
+--- Taken from : http://maude.lcc.uma.es/maude30-manual-html/maude-manualch7.html
+mod SAMPLER is 
+  pr RANDOM . 
+  pr COUNTER . 
+  pr CONVERSION . 
+  
+  op rand : -> [Float] . 
+  op sampleBernoulli : Float -> [Bool] . 
+  
+  rl rand => float(random(counter) / 4294967295) . 
+  rl sampleBernoulli(P:Float) => rand < P:Float .   
+endm
+
+
+mod CLOCK is 
+  pr SAMPLER . 
+  sort Clock . 
+  op clock : Nat Float -> Clock [ctor] . 
+  op broken : Nat Float -> Clock [ctor] . 
+  var T : Nat . 
+  var C : Float . 
+  rl clock(T,C) => if sampleBernoulli(C / 1000.0) 
+     			         then clock(s(T), C - (C / 1000.0)) 
+                   else broken(T, C) 
+                   fi . 
+endm
