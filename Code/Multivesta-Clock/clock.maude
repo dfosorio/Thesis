@@ -1,0 +1,103 @@
+mod SORTS is
+  pr APMAUDE .
+
+  sort State .
+  op working : -> State [ctor] .
+  op broken : -> State [ctor] .
+
+  op clockTick : -> Content [ctor] . --- name of the rule (necessary to run Multivesta)
+
+endm
+
+mod ATTRIBUTES is
+  pr NAT .
+  pr SORTS .
+
+  op Clock : -> Cid [ctor] .
+  op myClock : Nat -> Oid [ctor] .
+
+  op time:_ : Nat -> Attribute [ctor] . --- number of ticks of the clock
+  op battery:_ : Float -> Attribute [ctor] . --- amount of charge left in the clock's battery
+  op state:_  : State -> Attribute [ctor] . --- current state of the clock
+
+endm
+
+mod SCENARIO is
+  pr ATTRIBUTES .
+
+  vars n : Nat . vars mGT when : Float . var sc : Scheduler .
+
+
+  --- initial configuration                      
+  op init : -> Config .
+  eq init = {0.0 | [ 1.0 , (myClock(1) <- clockTick),0] } --- used by Multivesta
+            randomCounter(0) 
+            < myClock(1) : Clock  | time: 0, battery: 1000.0, state: working > . --- initial state
+
+endm
+
+mod DYNAMICS is
+  pr SCENARIO .
+  pr SAMPLER .
+
+  --- variables used for Multivesta processes
+  var gt : Float .  
+  var SL : ScheduleList .
+  var explCounter : Nat .
+
+  --- state variables
+  var cl : Oid .
+  var T : Nat .
+  var C : Float .
+
+
+  rl [clockTick] :
+    { gt | SL } (cl <- clockTick)
+    { < cl : Clock  | time: T, battery: C, state: working > 
+      randomCounter(explCounter) }
+  =>
+    if sampleBernoulli(explCounter, (C / 1000.0)) then
+      insert({ gt | SL },[ gt + 1.0 , (cl <- clockTick),0])
+      { < cl : Clock  | time: s(T), battery: (C - (C / 1000.0)), state: working > 
+        randomCounter(s(explCounter)) }
+    else
+      insert({ gt | SL },[ gt + 1.0 , (cl <- clockTick),0])
+      { < cl : Clock  | time: T, battery: C, state: broken > 
+        randomCounter(s(explCounter)) }
+    fi .
+
+endm
+
+mod ANALYSYS is
+  pr DYNAMICS .
+  pr CONVERSION .
+
+  var Con : Config .
+  var gt : Float .
+  var SL : ScheduleList .
+  var attrSet : AttributeSet .
+  var cl : Oid .
+  var T : Nat .
+  var C : Float .
+  var S : State .
+
+  op extractTime : Config -> Nat .
+  eq extractTime(< cl : Clock | time: T, attrSet > Con) = T .
+
+  op extractBattery : Config -> Float .
+  eq extractBattery(< cl : Clock | battery: C, attrSet > Con) = C .
+
+  --- returns 1.0 if the clock is broken, 0.0 if not
+  op isBroken : Config -> Float .
+  eq isBroken(< cl : Clock | state: broken, attrSet > Con) = 1.0 .
+  eq isBroken(< cl : Clock | state: working, attrSet > Con) = 0.0 .
+
+  --- Eval the time of the clock
+  eq val("eTime", {Con} {gt | SL}) = float(extractTime(Con)) .
+  --- Eval the battery of the clock
+  eq val("eBattery", {Con} {gt | SL}) = extractBattery(Con) .
+  --- Eval if the clock is broken
+  eq val("isBrk", {Con} { gt | SL}) = isBroken(Con) .
+  
+
+endm

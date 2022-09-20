@@ -1,0 +1,2 @@
+PBattery() = if ( s.rval("isBrk") == 1.0 ) then s.rval("eBattery") else # PBattery() fi ;
+eval E[ PBattery() ] ;
