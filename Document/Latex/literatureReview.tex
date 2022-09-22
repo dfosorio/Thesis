@@ -485,19 +485,92 @@ mod EXPONENTIAL-CLOCK-TRANSFORMED is
 endm
 \end{lstlisting}
 
-\section{PVeStA}
-%explain what is pvesta
-PVeStA \cite{AlTurki2011} is a statistical model checking tool for probabilistic-real time systems, that are specified either as discrete or continuous Markov chains, or probabilistic rewrite theories in Maude. It permits the verification of properties expressed in quantitative temporal logics like QuaTex \cite{Agha2006} using Monte Carlo simulations.
-%exlpain how to it works (version of Maude, files, process to verify a PMaude model)
-PVeStA is implemented in Java and consists of two executable programs: a client \texttt{pvesta-client} and a server \texttt{pvesta-server}. The \texttt{pvesta-client} program takes as input the Maude probabilistic model, a list of formulas written in QuaTex, multiple execution parameters for the model checking simulation and a server list. Then it sends to every one of the running \texttt{pvesta-servers} (PVeStA's model checking supports parallelism) a simulation request for the specified probabilistic Maue model and QuaTex formulas. After that, the servers return the results back to the \texttt{pvesta-client} program. This previously explained process can be viewed in the following figure:
+\section{VeStA, PVeStA, MultiVeStA and QuaTEx}
+%explain what is VeStA
+VeStA \cite{Vesta} is a tool (implemented in Java) for statistical analysis of probabilistic systems. It supports statistical model checking and statistical evaluation of expected values of temporal expressions. These expressions can be constructed using the query language of  \textit{Quantitative Temporal Expression} or QuaTEx \cite{Agha2006}, and analyzed by VeStA using \textit{Monte Carlo simulations} . 
+%explain how VeStA works
+The general process to use VeStA and analyze the properties of a probabilistic model, is the following:
+\begin{enumerate}
+    \item Create a probabilistic system in the supported modeling languages, e.g. probabilistic rewrite theories specified in PMaude.
+    \item Define the model properties that are going to be analyzed using the supported temporal expressions, e.g. QuaTEx.
+    \item Run Monte Carlos simulations using VeStA, over the model and the defined properties, specifying the simulation parameters.
+    \item Get the expected value of the temporal expressions specified in step 2.
+\end{enumerate}
+%explain how Quatex works
+The syntax of a QuaTEx expression is defined in figure \ref{fig:multivesta}. The reader can find an in depth explanation of this syntax and how QuaTEx queries evaluate in \cite{Agha2006,multivesta}, but for now we will define a QuaTEx expression as the expected value of a temporal logic predicate over state observations (i.e. the value of the variables of a model in a given configuration) that returns a real number (i.e. a \textit{real-typed predicate}). For example the QuaTEx expression \texttt{eval E[$PExp$]} returns the expected value of the real number returned by the temporal logic predicate $PExp$ (or also called \textit{path expression} in the syntax of QuaTEx).  
 \begin{figure}[h]
     \centering
-    \includegraphics[scale = 0.3]{images/pvesta.PNG}
-    \caption{Components and interactions of PVeStA, taken from \cite{AlTurki2011}}
-    \label{fig:pvesta}
+    \includegraphics[scale = 0.4]{images/quatex1.png}
+    \caption{QuaTEx syntax, taken from \cite{multivesta}}
+    \label{fig:multivesta}
 \end{figure}
-To demonstrate how PVeStA works, a variation of the clock model shown in the previous section will be used. 
 
+Using the previous definition of QuaTEx queries, let's suppose that we want to find the expected value of a QuaTEx query \texttt{eval E[$PExp$]} using VeStA (we will refer to the expected value of the QuaTEx query obtained by VeStA as $\bar{x}$, and to the real expected value as $x$). To obtain $\bar{x}$, VeStA uses 2 user-defined parameters $\alpha$ and $\delta$. With these parameters, VeStA runs $n$ simulations, until $n$ is large enough to obtain a \textit{confidence interval} (CI) with probability $(1-\alpha) * 100\%$ bounded by $\delta$, i.e an interval $[\bar{x} - \frac{\delta}{2},\bar{x} + \frac{\delta}{2}]$ where the probability that $x \in [\bar{x} - \frac{\delta}{2},\bar{x} + \frac{\delta}{2}]$ is $(1-\alpha) * 100\%$. In other words, if VeStA calculates the expected value of a QuaTEx query as $\bar{x}$, then the probability that the real expected value of the query (represented as $x$) is in the interval $[\bar{x} - \frac{\delta}{2},\bar{x} + \frac{\delta}{2}]$, is $(1-\alpha) * 100\%$ (An example will be presented in the next section to illustrate this)
+
+Based on this, the authors in \cite{AlTurki2011} present an extension of VeStA called PVeStA. This tool allows to run parallelized algorithms for statistical model checking using a client-server architecture. Furthermore \cite{multivesta} presents an extension of both VeStA and PVeStA called MultiVeStA, that extends the QuaTEx language to MultiQuaTEx, by allowing to query more state measures at a time. This improves the usability and the performance of the language. The extension also integrates existing discrete event simulators in addition to the originally supported ones, and improves the presentation of results. In the following section, an explanation of the use of MultiVeStA will be given, to illustrate all the concepts explained in this section.
+
+\section{Using MultiVeStA}
+Generally speaking, the blueprint to modify and run any PMaude model to be used by MultiVeStA is:
+\begin{enumerate}
+    \item Define the PMaude model states as configurations using object-oriented programming in Maude and define the system transitions as rewriting rules between configurations.
+    \item Include the necessary elements of Multivesta inside the model's
+    Maude definition.
+    \item Define an analysis module to define the model observations used by the QuaTEx queries.
+    \item Define the QuaTEx queries that represent the model's properties that want to be checked.
+    \item Specify the simulation parameters.
+    \item Run the simulations using the the probabilistic model, the QuaTEx queries and the simulation parameters.
+\end{enumerate}
+We will walk-through this steps with a practical example, where we aim to verify properties over the PMaude model of the clock model presented in section 2.6. Before we start, it is important to mention that the version of the MultiVeStA tool used for this example can be found in \cite{multiTool}. In this page the reader can find the instructions to download and run a prepared experiment with the tool.
+
+\subsection{Step 1}
+First of all, we will start from the following specification of the clock model explained in section 2.6 (named as \texttt{clock.maude}) taken from \cite{MaudeManual}:
+\begin{lstlisting}
+mod CLOCK is 
+  pr SAMPLER . 
+  sort Clock . 
+  op clock : Nat Float -> Clock [ctor] . 
+  op broken : Nat Float -> Clock [ctor] . 
+  var T : Nat . 
+  var C : Float . 
+  rl clock(T,C) => if sampleBernoulli(C / 1000.0) 
+     			   then clock(s(T), C - (C / 1000.0)) 
+                   else broken(T, C) 
+                   fi . 
+endm
+\end{lstlisting}
+To transform this module into an object oriented module, we will divide the sepecification in different modules. The first one is the module \texttt{SORTS}, where the different sorts of the attributes of the configuration or class will be specified. In this case, a sort \texttt{State} that has two constants \texttt{working} and \texttt{broken}, that represent the clock's state:
+\begin{lstlisting}
+mod SORTS is
+  pr APMAUDE .
+
+  sort State .
+  op working : -> State [ctor] .
+  op broken : -> State [ctor] .
+  
+endm
+\end{lstlisting}
+The second module is \texttt{ATTRIBUTES}, where the attributes of the model's states are defined:
+\begin{lstlisting}
+mod ATTRIBUTES is
+  pr NAT .
+  pr SORTS .
+
+  op Clock : -> Cid [ctor] .
+  op myClock : Nat -> Oid [ctor] .
+
+  op time:_ : Nat -> Attribute [ctor] . 
+  op battery:_ : Float -> Attribute [ctor] . 
+  op state:_  : State -> Attribute [ctor] . 
+
+endm
+\end{lstlisting}
+The third module is \texttt{SCENARIO}
+
+\subsection{Step 2}
+\subsection{Step 3}
+\subsection{Step 4}
+\subsection{Step 5}
+\subsection{Step 6}
 
 
 
