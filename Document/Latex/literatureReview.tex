@@ -510,20 +510,18 @@ Using the previous definition of QuaTEx queries, let's suppose that we want to f
 Based on this, the authors in \cite{AlTurki2011} present an extension of VeStA called PVeStA. This tool allows to run parallelized algorithms for statistical model checking using a client-server architecture. Furthermore \cite{multivesta} presents an extension of both VeStA and PVeStA called MultiVeStA, that extends the QuaTEx language to MultiQuaTEx, by allowing to query more state measures at a time. This improves the usability and the performance of the language. The extension also integrates existing discrete event simulators in addition to the originally supported ones, and improves the presentation of results. In the following section, an explanation of the use of MultiVeStA will be given, to illustrate all the concepts explained in this section.
 
 \section{Using MultiVeStA}
-Generally speaking, the blueprint to modify and run any PMaude model to be used by MultiVeStA is:
+The aim of this section is to provide a simple tutorial on how to use the MultiVeStA tool, since the available information online is very limited. Generally speaking, the blueprint to modify and run any PMaude model to be used by MultiVeStA is:
 \begin{enumerate}
-    \item Define the PMaude model states as configurations using object-oriented programming in Maude and define the system transitions as rewriting rules between configurations.
-    \item Include the necessary elements of Multivesta inside the model's
-    Maude definition.
+    \item Define the PMaude model's states as configurations using object-oriented programming in Maude and define the system transitions as rewriting rules between configurations.
+    \item Include the necessary elements of MultiVeStA inside the model's definition.
     \item Define an analysis module to define the model observations used by the QuaTEx queries.
     \item Define the QuaTEx queries that represent the model's properties that want to be checked.
     \item Specify the simulation parameters.
     \item Run the simulations using the the probabilistic model, the QuaTEx queries and the simulation parameters.
 \end{enumerate}
-We will walk-through this steps with a practical example, where we aim to verify properties over the PMaude model of the clock model presented in section 2.6. Before we start, it is important to mention that the version of the MultiVeStA tool used for this example can be found in \cite{multiTool}. In this page the reader can find the instructions to download and run a prepared experiment with the tool.
-
-\subsection{Step 1}
-First of all, we will start from the following specification of the clock model explained in section 2.6 (named as \texttt{clock.maude}) taken from \cite{MaudeManual}:
+We will walk-through this steps with a practical example, where we aim to verify properties over the PMaude model of the clock model presented in section 2.6. Before we start, it is important to mention that the version of the MultiVeStA tool used for this example can be found in \cite{multiTool}. In this GitHub page, the reader can find the instructions to download and run MultiVeStA. It is important that the reader runs the prepared \texttt{dice.maude} example and read the \texttt{README} file, to get to know the tool.
+\subsection{Step 1: Object-based clock example}
+First of all, we will start from the following specification of the clock model explained in section 2.6 (with file name \texttt{clock.maude}) taken from \cite{MaudeManual}:
 \begin{lstlisting}
 mod CLOCK is 
   pr SAMPLER . 
@@ -538,35 +536,130 @@ mod CLOCK is
                    fi . 
 endm
 \end{lstlisting}
-To transform this module into an object oriented module, we will divide the sepecification in different modules. The first one is the module \texttt{SORTS}, where the different sorts of the attributes of the configuration or class will be specified. In this case, a sort \texttt{State} that has two constants \texttt{working} and \texttt{broken}, that represent the clock's state:
+To transform this specification into an object oriented one, we will divide it in different modules. The first one is the module \texttt{SORTS}, where the different sorts of the attributes of the configuration or class will be specified. In this case, a sort \texttt{State} that has two constants \texttt{working} and \texttt{broken}:
 \begin{lstlisting}
 mod SORTS is
-  pr APMAUDE .
-
   sort State .
   op working : -> State [ctor] .
   op broken : -> State [ctor] .
-  
 endm
 \end{lstlisting}
-The second module is \texttt{ATTRIBUTES}, where the attributes of the model's states are defined:
+The second module is \texttt{ATTRIBUTES}, where the attributes , the class identifier and the object identifier of the model's states are defined:
 \begin{lstlisting}
 mod ATTRIBUTES is
+  pr CONFIGURATION .
   pr NAT .
+  pr FLOAT .
   pr SORTS .
-
   op Clock : -> Cid [ctor] .
-  op myClock : Nat -> Oid [ctor] .
-
+  op myClock : -> Oid [ctor] .
   op time:_ : Nat -> Attribute [ctor] . 
   op battery:_ : Float -> Attribute [ctor] . 
   op state:_  : State -> Attribute [ctor] . 
+endm
+\end{lstlisting}
+The third module is \texttt{SCENARIO} where the initial state of the system is going to be defined. It is important to mention, that the name of the initial state must be \texttt{init}, so MultiVeStA can recognize it:
+\begin{lstlisting}
+mod SCENARIO is
+  pr ATTRIBUTES .
+  op init : -> Configuration .
+  eq init = < myClock : Clock  | time: 0, 
+              battery: 1000.0, state: working > . 
+endm
+\end{lstlisting}
+The fourth module, is the \texttt{DYNAMICS} module. This module will contain the conditional and unconditional rewriting rules of the model:
+\begin{lstlisting}
+mod DYNAMICS is
+  pr SCENARIO .
+  pr SAMPLER . *** Using the previously defined sampler
+  var cl : Oid .
+  var T : Nat .
+  var C : Float .
+  
+  rl [clockTick] :
+    < cl : Clock  | time: T, battery: C, state: working > 
+  =>
+    if sampleBernoulli(C / 1000.0) then
+      < cl : Clock  | time: s(T), battery: (C - (C / 1000.0)), state: working >
+    else
+      < cl : Clock  | time: T, battery: C, state: broken >
+    fi .
+endm
+\end{lstlisting}
+The module \texttt{SAMPLER} is the same sampler module defined for the clock example in the PMaude section. If we include all this modules in the same file, named \texttt{clock.maude}, we can load the file to maude and apply the \texttt{rew} and \texttt{search} to verify and test the specification as one would normally do with other system modules. 
+
+\subsection{Step 2: Including MultiVeStA elements}
+First, in the \texttt{SORTS} module include the \texttt{APMAUDE} module that comes with the tool in the \texttt{apmaude.maude} file. The \texttt{APMAUDE} module includes other predefined Maude modules like \texttt{CONFIGURATION} (where the \texttt{Configuration} sort is renamed to \texttt{Config}), \texttt{NAT}, \texttt{FLOAT} and \texttt{STRING}. After that, for each one of the rewriting rules specified in \texttt{DYNAMICS}, create a constant, with the exact name of the label of the rule, of sort \texttt{Content} (The sort content is defined inside the \texttt{APMAUDE} module). The resulting \texttt{SORTS} module is:
+\begin{lstlisting}
+mod SORTS is
+  pr APMAUDE .
+  sort State .
+  op working : -> State [ctor] .
+  op broken : -> State [ctor] .
+  op clockTick : -> Content [ctor] .
+endm
+\end{lstlisting}
+Since the \texttt{APMAUDE} includes the sorts \texttt{CONFIGURATION}, \texttt{NAT}, \texttt{FLOAT}, then in the \texttt{ATTRIBUTES} module is no longer necessary to include again these modules, because they will be included in \texttt{SORTS}. In the \texttt{SCENARIO} module, the initial configuration of the system must be modified to:
+\begin{lstlisting}
+mod SCENARIO is
+  pr ATTRIBUTES .
+  op init : -> Configuration .
+  eq init = {0.0 | [ 1.0 , (myClock <- clockTick),0] }
+            randomCounter(0)
+            < myClock : Clock  | time: 0, battery: 1000.0, state: working > . 
+endm
+\end{lstlisting}
+In this new \texttt{init} configuration there are 3 objects:
+\begin{itemize}
+    \item The first one is a construction used by MultiVeStA, and states that the initial time is 0.0, the initial event or rule to be applied is \texttt{clockTick} (which corresponds to the constant of type \texttt{Content} specified in the \texttt{SORTS} module) and it would be applied at time 1.0 to the object with Oid \texttt{myClock}.
+    \item The second object \texttt{randomCounter}is a counter used to generate pseudo-random numbers, and is initialized to 0. MultiVeStA also requires the definition of this object to run the simulations.
+    \item The third object corresponds to the same initial state of the model presented in the previous \texttt{SCENARIO} module.
+\end{itemize}
+Finally, the module \texttt{DYNAMICS} must be modified to:
+\begin{lstlisting}
+mod DYNAMICS is
+  pr SCENARIO .
+  pr SAMPLER .
+
+  *** variables used for Multivesta processes
+  var gt : Float .  
+  var SL : ScheduleList .
+  var explCounter : Nat .
+
+  *** state variables
+  var cl : Oid .
+  var T : Nat .
+  var C : Float .
+
+
+  crl [clockTick] :
+    { gt | SL } (cl <- clockTick)
+    { < cl : Clock  | time: T, battery: C, state: working > 
+      randomCounter(explCounter) }
+  =>
+    if sampleBernoulli(explCounter, (C / 1000.0)) then
+      insert({ gt | SL },[ gt + 1.0 , (cl <- clockTick),0])
+      { < cl : Clock  | time: s(T), 
+                        battery: (C - (C / 1000.0)), state: working > 
+        randomCounter(s(explCounter)) }
+    else
+      insert({ gt | SL },[ gt + 1.0 , (cl <- clockTick),0])
+      { < cl : Clock  | time: T, battery: C, state: broken > 
+        randomCounter(s(explCounter)) }
+    fi .
 
 endm
 \end{lstlisting}
-The third module is \texttt{SCENARIO}
+This new module includes the following changes:
+\begin{itemize}
+    \item The protected \texttt{SAMPLER} module corresponds to the sampler defined in the \texttt{apmaude.maude} file. This new sampler uses a counter to generate random number. That is why the new call of the function \texttt{sampleBernoulli} has an additional parameter \texttt{explCounter}.
+    \item A new set of variables needs to be declared to match the structures that MultiVeStA uses.
+    \item The \texttt{clockTick} rule needs to be modified to incorporate the needed elements so MultiVeStA can function correctly. To do this it is necessary to:
+    \begin{itemize}
+        \item The first one is \texttt{\{ gt | SL \} (cl <- clockTick)}
+    \end{itemize}
+\end{itemize}
 
-\subsection{Step 2}
 \subsection{Step 3}
 \subsection{Step 4}
 \subsection{Step 5}
