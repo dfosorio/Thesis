@@ -507,17 +507,19 @@ The syntax of a QuaTEx expression is defined in figure \ref{fig:multivesta}. The
 
 Using the previous definition of QuaTEx queries, let's suppose that we want to find the expected value of a QuaTEx query \texttt{eval E[$PExp$]} using VeStA (we will refer to the expected value of the QuaTEx query obtained by VeStA as $\bar{x}$, and to the real expected value as $x$). To obtain $\bar{x}$, VeStA uses 2 user-defined parameters $\alpha$ and $\delta$. With these parameters, VeStA runs $n$ simulations, until $n$ is large enough to obtain a \textit{confidence interval} (CI) with probability $(1-\alpha) * 100\%$ bounded by $\delta$, i.e an interval $[\bar{x} - \frac{\delta}{2},\bar{x} + \frac{\delta}{2}]$ where the probability that $x \in [\bar{x} - \frac{\delta}{2},\bar{x} + \frac{\delta}{2}]$ is $(1-\alpha) * 100\%$. In other words, if VeStA calculates the expected value of a QuaTEx query as $\bar{x}$, then the probability that the real expected value of the query (represented as $x$) is in the interval $[\bar{x} - \frac{\delta}{2},\bar{x} + \frac{\delta}{2}]$, is $(1-\alpha) * 100\%$ (An example will be presented in the next section to illustrate this)
 
-Based on this, the authors in \cite{AlTurki2011} present an extension of VeStA called PVeStA. This tool allows to run parallelized algorithms for statistical model checking using a client-server architecture. Furthermore \cite{multivesta} presents an extension of both VeStA and PVeStA called MultiVeStA, that extends the QuaTEx language to MultiQuaTEx, by allowing to query more state measures at a time. This improves the usability and the performance of the language. The extension also integrates existing discrete event simulators in addition to the originally supported ones, and improves the presentation of results. In the following section, an explanation of the use of MultiVeStA will be given, to illustrate all the concepts explained in this section.
+Based on this, the authors in \cite{AlTurki2011} present an extension of VeStA called PVeStA. This tool allows to run parallelized algorithms for statistical model checking using a client-server architecture. Furthermore \cite{multivesta} presents an extension of both VeStA and PVeStA called MultiVeStA, that extends the QuaTEx language to MultiQuaTEx, by allowing to query more state measures at a time. This improves the usability and the performance of the language. The extension also integrates existing discrete event simulators in addition to the originally supported ones, and improves the presentation of results. 
+
+%In the following section, an explanation of the use of %MultiVeStA will be given, to illustrate all the concepts %explained in this section.
 
 \section{Using MultiVeStA}
-The aim of this section is to provide a simple tutorial on how to use the MultiVeStA tool, since the available information online is very limited. Generally speaking, the blueprint to modify and run any PMaude model to be used by MultiVeStA is:
+The aim of this section is to provide a simple tutorial on how to use the MultiVeStA tool, since the information from the available sources is very limited. Generally speaking, the blueprint to modify and run any PMaude model to be used by MultiVeStA is:
 \begin{enumerate}
     \item Define the PMaude model's states as configurations using object-oriented programming in Maude and define the system transitions as rewriting rules between configurations.
     \item Include the necessary elements of MultiVeStA inside the model's definition.
-    \item Define an analysis module to define the model observations used by the QuaTEx queries.
-    \item Define the QuaTEx queries that represent the model's properties that want to be checked.
+    \item Define an analysis module to define the model observations used by the MultiQuaTEx queries.
+    \item Define the MultiQuaTEx queries that represent the model's properties that want to be checked.
     \item Specify the simulation parameters.
-    \item Run the simulations using the the probabilistic model, the QuaTEx queries and the simulation parameters.
+    \item Run the simulations using the the probabilistic model, the MultiQuaTEx queries and the simulation parameters.
 \end{enumerate}
 We will walk-through this steps with a practical example, where we aim to verify properties over the PMaude model of the clock model presented in section 2.6. Before we start, it is important to mention that the version of the MultiVeStA tool used for this example can be found in \cite{multiTool}. In this GitHub page, the reader can find the instructions to download and run MultiVeStA. It is important that the reader runs the prepared \texttt{dice.maude} example and read the \texttt{README} file, to get to know the tool.
 \subsection{Step 1: Object-based clock example}
@@ -547,9 +549,6 @@ endm
 The second module is \texttt{ATTRIBUTES}, where the attributes , the class identifier and the object identifier of the model's states are defined:
 \begin{lstlisting}
 mod ATTRIBUTES is
-  pr CONFIGURATION .
-  pr NAT .
-  pr FLOAT .
   pr SORTS .
   op Clock : -> Cid [ctor] .
   op myClock : -> Oid [ctor] .
@@ -599,11 +598,11 @@ mod SORTS is
   op clockTick : -> Content [ctor] .
 endm
 \end{lstlisting}
-Since the \texttt{APMAUDE} includes the sorts \texttt{CONFIGURATION}, \texttt{NAT}, \texttt{FLOAT}, then in the \texttt{ATTRIBUTES} module is no longer necessary to include again these modules, because they will be included in \texttt{SORTS}. In the \texttt{SCENARIO} module, the initial configuration of the system must be modified to:
+Since the \texttt{APMAUDE} includes the modules \texttt{CONFIGURATION}, \texttt{NAT} and \texttt{FLOAT}, then in the \texttt{ATTRIBUTES} module is no longer necessary to include again these modules, because they will be included in \texttt{SORTS}. In the \texttt{SCENARIO} module, the initial configuration of the system must be modified to:
 \begin{lstlisting}
 mod SCENARIO is
   pr ATTRIBUTES .
-  op init : -> Configuration .
+  op init : -> Config .
   eq init = {0.0 | [ 1.0 , (myClock <- clockTick),0] }
             randomCounter(0)
             < myClock : Clock  | time: 0, battery: 1000.0, state: working > . 
@@ -613,7 +612,7 @@ In this new \texttt{init} configuration there are 3 objects:
 \begin{itemize}
     \item The first one is a construction used by MultiVeStA, and states that the initial time is 0.0, the initial event or rule to be applied is \texttt{clockTick} (which corresponds to the constant of type \texttt{Content} specified in the \texttt{SORTS} module) and it would be applied at time 1.0 to the object with Oid \texttt{myClock}.
     \item The second object \texttt{randomCounter}is a counter used to generate pseudo-random numbers, and is initialized to 0. MultiVeStA also requires the definition of this object to run the simulations.
-    \item The third object corresponds to the same initial state of the model presented in the previous \texttt{SCENARIO} module.
+    \item The third object corresponds to the same initial state of the model presented in the previous section.
 \end{itemize}
 Finally, the module \texttt{DYNAMICS} must be modified to:
 \begin{lstlisting}
@@ -621,26 +620,25 @@ mod DYNAMICS is
   pr SCENARIO .
   pr SAMPLER .
 
-  *** variables used for Multivesta processes
+  --- variables used for Multivesta processes
   var gt : Float .  
   var SL : ScheduleList .
   var explCounter : Nat .
 
-  *** state variables
+  --- state variables
   var cl : Oid .
   var T : Nat .
   var C : Float .
 
 
-  crl [clockTick] :
+  rl [clockTick] :
     { gt | SL } (cl <- clockTick)
     { < cl : Clock  | time: T, battery: C, state: working > 
       randomCounter(explCounter) }
   =>
     if sampleBernoulli(explCounter, (C / 1000.0)) then
       insert({ gt | SL },[ gt + 1.0 , (cl <- clockTick),0])
-      { < cl : Clock  | time: s(T), 
-                        battery: (C - (C / 1000.0)), state: working > 
+      { < cl : Clock  | time: s(T), battery: (C - (C / 1000.0)), state: working > 
         randomCounter(s(explCounter)) }
     else
       insert({ gt | SL },[ gt + 1.0 , (cl <- clockTick),0])
@@ -653,17 +651,73 @@ endm
 This new module includes the following changes:
 \begin{itemize}
     \item The protected \texttt{SAMPLER} module corresponds to the sampler defined in the \texttt{apmaude.maude} file. This new sampler uses a counter to generate random number. That is why the new call of the function \texttt{sampleBernoulli} has an additional parameter \texttt{explCounter}.
-    \item A new set of variables needs to be declared to match the structures that MultiVeStA uses.
-    \item The \texttt{clockTick} rule needs to be modified to incorporate the needed elements so MultiVeStA can function correctly. To do this it is necessary to:
+    \item A new set of variables needs to be declared to match the structures that MultiVeStA uses in the rewriting rule.
+    \item The \texttt{clockTick} rule needs to be modified to incorporate the needed elements so MultiVeStA can function correctly:
     \begin{itemize}
-        \item The first one is \texttt{\{ gt | SL \} (cl <- clockTick)}
+        \item The first one is \texttt{\{ gt | SL \} (cl <- clockTick)} which means that in the current state configuration the rule \texttt{clockTick} is "called". Also, the \texttt{randomCounter} and the system's state represented by the clock object need to be inside \{\} to function correctly. 
+        \item The next system configuration needs to include the object \texttt{insert(\{ gt | SL \},[ gt + 1.0 , (cl <- clockTick),0])} and \\ \texttt{randomCounter(s(explCounter))}, since they are necessary to tell MultiVeStA to advance the time of the simulation, specify what is the next rule to apply (in this case it is \texttt{clockTick}) and update the counter that is used to generate pseudo-random numbers. Both the \texttt{randomCounter} and the system state need to be grouped by the symbols \{\}. 
     \end{itemize}
 \end{itemize}
 
-\subsection{Step 3}
-\subsection{Step 4}
-\subsection{Step 5}
-\subsection{Step 6}
+\subsection{Step 3: Defining state observations}
+Let's suppose that the properties that are going to be checked using MultiVeStA for the clock model, are the expected value of the clock's time and battery when it breaks. To verify these values, it is necessary to access during simulations to the state of the model using the real-typed predicate \texttt{rval}, explained in \cite{multivesta}. One way of doing it, is by defining a new module \texttt{ANALYSYS} where the necessary operators and equations to create the \texttt{rval} predicates are defined:
+\begin{lstlisting}
+mod ANALYSYS is
+  pr DYNAMICS .
+  
+  var Con : Config .
+  var gt : Float .
+  var SL : ScheduleList .
+  var attrSet : AttributeSet .
+  var cl : Oid .
+  var T : Nat .
+  var C : Float .
+  var S : State .
+
+  op extractTime : Config -> Nat .
+  eq extractTime(< cl : Clock | time: T, attrSet > Con) = T .
+
+  op extractBattery : Config -> Float .
+  eq extractBattery(< cl : Clock | battery: C, attrSet > Con) = C .
+
+  *** returns 1.0 if the clock is broken, 0.0 if not
+  op isBroken : Config -> Float .
+  eq isBroken(< cl : Clock | state: broken, attrSet > Con) = 1.0 .
+  eq isBroken(< cl : Clock | state: working, attrSet > Con) = 0.0 .
+
+  *** Eval the time of the clock
+  eq val("eTime", {Con} {gt | SL}) = float(extractTime(Con)) .
+  *** Eval the battery of the clock
+  eq val("eBattery", {Con} {gt | SL}) = extractBattery(Con) .
+  *** Eval if the clock is broken
+  eq val("isBrk", {Con} { gt | SL}) = isBroken(Con) .
+endm
+\end{lstlisting}
+The operator \texttt{val} represents the \texttt{rval} predicate. It takes as input a string or a natural number, that identifies the predicate (e.g. "eTime", "eBattery" and "isBrk") and the current system state. The output value of \texttt{val} must be of sort \texttt{Float} and represents the \texttt{Float} value of a system observation. \texttt{val("eTime")} returns the current time of the clock, \texttt{val("eBattery")} returns the current battery level of the clock and \texttt{val("isBrk")} checks if in the current state the clock is broken. 
+
+\subsection{Step 4: Defining MultiQuaTEx formulas}
+As mentioned before, the properties to be checked are:
+\begin{enumerate}
+    \item What is the expected value of time when the clock breaks?
+    \item What is the expected value of the battery when the clock breaks?
+\end{enumerate}
+The MultiQuaTEx files defined for query 1 and 2 are named as \texttt{probTime.} \texttt{multiquatex} and \texttt{probBattery.multiquatex} respectively. The first contains the following query:
+\begin{lstlisting}
+PTime() = if ( s.rval("isBrk") == 1.0 ) 
+          then s.rval("eTime") else # PTime() fi ;
+
+eval E[ PTime() ] ;
+\end{lstlisting}
+Using the MultiQuaTEx syntax, It states that the if the clock is broken (i.e. \texttt{s.rval("isBrk") == 1.0}) then return the current time of the clock (i.e. \texttt{s.rval("eTime")}). If not, the query recursively calls itself in the following system state (i.e. \texttt{\# PTime()}). The other query is the same as the previos one, but instead of \texttt{s.rval("eTime")} is \texttt{s.rval("eBattery")}:
+\begin{lstlisting}
+PBattery() = if ( s.rval("isBrk") == 1.0 ) 
+             then s.rval("eBattery") else # PBattery() fi ;
+
+eval E[ PBattery() ] ;
+\end{lstlisting}
+MultiQuaTEx allows the user to construct more complex queries, for instance, by defining temporal operators. The reader can refer to \cite{multivesta} to get more details on the QuaTEx's and MultiQuaTEx's syntax.
+
+\subsection{Step 5: Running simulations}
 
 
 
