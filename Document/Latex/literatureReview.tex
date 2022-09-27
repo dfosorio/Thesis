@@ -151,17 +151,19 @@ The resulting probabilistic model is displayed in figure \ref{fig:brake3}. This 
 %explain the generality of Maude
 Maude \cite{MaudeManual, PeterMaude, Lecture1} is a high performance declarative language, that allows the specification of programs or systems, and their formal verification.
 %explain how Maude program are written in functional module (sorts, subsorts, ops, etc, equations and equation evaluation)
-Maude's programs are represented as \textit{functional modules} declared with syntax:
-\begin{lstlisting}
+Maude's programs are represented as \textit{functional modules} declared with syntax: \\
+
+\begin{maude}
 fmod MODULENAME is
     BODY
 endfm
-\end{lstlisting}
+\end{maude}
 where \textit{MODULENAME} is the name of the functional module, and \textit{BODY} is a set of declarations that specify the program. The body of the module contains \textit{sorts} (written in Maude as \texttt{sorts}), where each sort correspond to a specific data type of the program. It also contains a set of function symbols or function declarations called \textit{operators} (abbreviated as \texttt{op} in Maude), that specify the constructors of the different sorts, along with the syntax of the program functions. Finally, a set of \textit{equations} (abbreviated as \texttt{eq} in Maude) is used to define the behavior of the functions. These equations use \textit{variables} (abbreviated as \texttt{var} in Maude) to describe how each function works. 
 
 %provide an example of a maude program functional module
 To illustrate how a Maude program is contructed, the following code corresponds to a program that defines the natural numbers and the addition operation, borrowed from \cite{PeterMaude}: 
-\begin{lstlisting}
+\\
+\begin{maude}
 fmod NAT-ADD is
   sort Nat .
 
@@ -175,9 +177,10 @@ fmod NAT-ADD is
   eq N + 0 = N .
   eq N + s(M) = s(N + M) .
 endfm
-\end{lstlisting}
+\end{maude}
 The sort \texttt{Nat} is a data type that represents the natural numbers. This sort has two constructors (represented in the code with the key word \texttt{ctor}): 0 which is a constant and the operator \texttt{s}, which takes one argument of type \texttt{Nat} and represents the successor function in the natural numbers. With these two operators, it is possible to define arithmetic functions in the natural numbers, like addition or multiplication. In this module, both functions are defined inductively using equations. Using this module, it is possible to compute the value for addition or multiplication for two natural numbers using the command \texttt{red}. For example, if the command \texttt{red s(s(s(0))) + s(s(0))} is used, that represents the operation 3 + 2, the answer 5 is obtained represented as \texttt{s(s(s(s(s(0)))))}:
-\begin{lstlisting}
+\\
+\begin{maude2}
 *********** equation
 eq N + s(M) = s(N + M) .
 N --> s(s(s(0)))
@@ -199,7 +202,7 @@ s(s(s(0))) + 0
 --->
 s(s(s(0)))
 result Nat: s(s(s(s(s(0)))))
-\end{lstlisting}
+\end{maude2}
 Maude computes using equations from left to right. Therefore, in computation steps like the first one, the expression \texttt{s(s(s(0))) + s(s(0))} is matched with the left side of the equation \texttt{N + s(M) = s(N + M)} and matching substitution $\{\texttt{N} \mapsto \texttt{s(s(s(0)))},\texttt{M} \mapsto \texttt{s(0)} \}$. The resulting expression \texttt{s(s(s(0))) + s(s(0))}, will be simplified again with the same equation, until it reduces to a simplified expression that can be matched with the equation \texttt{N + 0 = N} (as seen in the last step).
 
 %explain the semantics behind the functional modules
@@ -237,22 +240,26 @@ Aside from building programs in Maude using functional modules, it is also possi
     \item $R$ is a set of unconditional labeled rewrite rules of the form $l: t \rightarrow t'$, and conditional labeled rewrite rules of the form $l: t \rightarrow t' \ \text{if} \ cond$, where $l \in L$, $t,t'$ are terms in $\Sigma$ and $cond$ is a condition or system guard.    
 \end{itemize}
 The syntax for system modules in Maude is:
-\begin{lstlisting}
+\\
+\begin{maude}
 mod MODULENAME is
     BODY
 endm
-\end{lstlisting}
+\end{maude}
 Where the body represents a rewrite theory $\mathscr{R}$. The syntax for unconditional rewriting rules is
-\begin{lstlisting}[mathescape=true]
+\\
+\begin{maude}
 rl [$l$] : $t$ => $t'$ .
-\end{lstlisting}
+\end{maude}
 and for conditional rewriting rules is
-\begin{lstlisting}[mathescape=true]
+\\
+\begin{maude}
 crl [$l$] : $t$ => $t'$ if $cond$ .
-\end{lstlisting}
+\end{maude}
 %provide an example of a model
 to exemplify this, let's consider the following simple model of a bus: A transport bus has capacity for 60 people. The bus can be moving or stationary, and can only drop or lift passengers when the bus is stationary. Finally, at any time the bus driver can use the brake to stop or use the gas pedal to move. The corresponding Maude system module for this model is:
-\begin{lstlisting}
+\\
+\begin{maude}
 mod BUS is protecting NAT .
   sorts Bus Status .
 
@@ -261,17 +268,17 @@ mod BUS is protecting NAT .
  
   vars N M : Nat . var S : Status .
 
-  *** move the bus
+  --- move the bus
   rl [move] : bus(N,stationary) => bus(N,moving) .
-  *** stop the bus 
+  --- stop the bus 
   rl [stop] : bus(N,moving) => bus(N,stationary) .
-  *** drop passenger
+  --- drop passenger
   rl [drop] : bus(s(N),stationary) => bus(N,stationary) .
-  *** lift passenger
+  --- lift passenger
   crl [lift] : bus(N,stationary) => bus(s(N),stationary) 
                                     if s(N) <= 60 . 
 endm
-\end{lstlisting}
+\end{maude}
 %explain how the maude model corresponds to the theory
 In this model the states of the system are represented with instances of the sort \texttt{Bus}, and it contains a natural number that represents the number of people inside the bus and a \texttt{Status}, which represents the state of the bus (it can be stationary or moving). In this case, no equations are used, therefore the set of equations $E = \emptyset$  and $\Sigma$ will contain the sorts \texttt{Bus} and \texttt{Status} with their respective operators. To model the different events in the model, 4 rewriting rules were used:
 \begin{itemize}
@@ -281,75 +288,77 @@ In this model the states of the system are represented with instances of the sor
     \item A conditional rule, labeled \texttt{lift}, that represents the event of lifting a passenger. When this rules are applied, the number of passengers inside the bus is increased by one. To prevent exceeding the maximum capacity of the bus, the condition \texttt{if s(N) <= 60} is used. 
 \end{itemize}
 With this system module, that represents a rewrite theory $\mathscr{R}$, the simple bus model can be specified and verified using other functionalities in Maude like model checking with the commands \texttt{rewrite} and \texttt{search}. The \texttt{rewrite} command or \texttt{rew} takes an initial state of the system and uses the rewriting rules until termination, i.e. until no other rewriting rule can be applied to the system state. In the case of the bus example, the rules \texttt{move} and \texttt{stop} can be applied infinitely. Therefore, to be able to simulate this system, Maude also allows to use bounded rewriting. With this method, it is possible to specify the number of rewriting rules to be applied to the initial state of the system. For example, the command \texttt{rew [3] bus(0, stationary) .} will apply 3 rewriting rules to the state \texttt{bus(0, stationary)}, which refers to a stationary bus with no passengers. The resulting execution is:
-\begin{lstlisting}
+\\
+\begin{maude2}
 *********** rule
 rl bus(N, stationary) => bus(N, moving) [label move] .
-
 bus(0, stationary)
 --->
 bus(0, moving)
 *********** rule
 rl bus(N, moving) => bus(N, stationary) [label stop] .
-
 bus(0, moving)
 --->
 bus(0, stationary)
 *********** rule
-crl bus(N, stationary) => bus(s N, stationary) if s N <= 60 = true [label lift] .
-
+crl bus(N, stationary) => bus(s N, stationary) 
+                          if s N <= 60 = true [label lift] .
 bus(0, stationary)
 --->
 bus(1, stationary)
 result Bus: bus(1, stationary)
-\end{lstlisting}
+\end{maude2}
 Lastly, with the \texttt{search} command it is possible to verify if a given state is reachable. For example, to check if the state \texttt{bus(10,stationary)} can be reached from the initial state \texttt{bus(0,moving)}, the command \texttt{search bus(0,stationary) =>* bus(10, moving) .}  can be used. The result of this command is:
-\begin{lstlisting}
+'\\
+\begin{maude2}
 search in BUS : bus(0, stationary) =>* bus(10, moving) .
-
 Solution 1 (state 21)
 states: 22  rewrites: 50 in 0ms cpu (0ms real) (~ rewrites/second)
 empty substitution
-
 No more solutions.
-\end{lstlisting}
+\end{maude2}
 If the search returns a solution, it means that the state is reachable. Furthermore, it is also possible to check if the system will exceed the maximum capacity, defining a system invariant $I$ that states this property. This can be done, by adding the following code to the bus module:
-\begin{lstlisting}
-*** Define predicates
+\\
+\begin{maude}
+--- Define predicates
   var X : Bus .
   op predicate : Bus -> Bool .
   eq predicate(bus(N,S)) = if N <= 60 then true else false fi .
-\end{lstlisting}
+\end{maude}
 This invariant can be checked with the \texttt{search} command using:
-\begin{lstlisting}
+\\
+\begin{maude2}
 search bus(0,stationary) =>* X  s.t. predicate(X) =/= true .
-\end{lstlisting}
-which searches for a state \texttt{X} where the bus has more than 60 passengers. The resulting execution of the command returns no solution:
-\begin{lstlisting}
-search in BUS : bus(0, stationary) =>* X such that predicate(X) =/= true = true .
-
+\end{maude2}
+which searches for a state \texttt{X} where the bus has more than 60 passengers. The resulting execution of the command returns no solution: \\
+\begin{maude2}
+search in BUS : bus(0, stationary) =>* 
+                X such that predicate(X) =/= true = true .
 No solution.
-\end{lstlisting}
+\end{maude2}
 This means that the bus system can not exceed the maximum capacity of the bus.
 \section{Object-Based Programming in Maude}
 Object-based programming in Maude \cite{MaudeManual, Lecture3, PeterMaude} is supported by a predefined module \texttt{CONFIGURATION}. This module contains the necessary sorts and syntax to define the objects, messages, system configurations and objects interactions, of an object-based system. This module is defined as:
-\begin{lstlisting}
+\\
+\begin{maude}
 mod CONFIGURATION is
-  *** basic object system sorts
+  --- basic object system sorts
   sorts Object Msg Configuration .
-  *** construction of configurations
+  --- construction of configurations
   subsort Object Msg < Configuration .
   op none : -> Configuration [ctor] .
-  op __ : Configuration Configuration -> Configuration
-[ctor config assoc comm id: none] .
-\end{lstlisting}
+  op _ _ : Configuration Configuration -> Configuration
+           [ctor config assoc comm id: none] .
+\end{maude}
 
 The basic sorts are \texttt{Object}, \texttt{Msg} and \texttt{Configuration}. A term of sort \texttt{Object} represents an instance of a system object, a term of sort \texttt{Msg} represents a message shared by the system objects and a term of sort \texttt{Configuration} represents a snapshot of the current system state, represented as a multiset of objects and messages. These configurations are built with the multiset union operation (defined with syntax \texttt{\_\,\_} ) between objects, messages or other configurations, and the empty configuration is defined as \texttt{none}. The module configuration also implements a predefined syntax for object construction. They have the form:
 \begin{align*}
     \langle O : C \ | \ a_1:v_1,...a_n:v_n \rangle
 \end{align*}
 Where $O$ is the object's identifier, $C$ is its class, $a_1...a_n$ are attribute identifiers and $v_1...v_n$ are the values of each one of the attributes. This defined syntax in Maude is implemented as:
-\begin{lstlisting}
-  *** Maude object syntax
+\\
+\begin{maude}
+  --- Maude object syntax
   sorts Oid Cid .
   sorts Attribute AttributeSet .
   subsort Attribute < AttributeSet .
@@ -358,10 +367,11 @@ Where $O$ is the object's identifier, $C$ is its class, $a_1...a_n$ are attribut
   [ctor assoc comm id: none] .
   op <_:_|_> : Oid Cid AttributeSet -> Object [ctor object] .
 endm
-\end{lstlisting}
+\end{maude}
 Where \texttt{Oid} corresponds to the object identifier $O$, \texttt{Cid} is the class identifier $C$ and the attributes of the object are represented as a multiset. Messages' syntax is defined by the user. To understand how systems are modeled in Maude with configurations, the bank account example in \cite{MaudeManual} can be examined:
+\\
 %provide an example
-\begin{lstlisting}
+\begin{maude}
 mod BANK-ACCOUNT is
     protecting INT .
     protecting CONFIGURATION .
@@ -372,7 +382,7 @@ mod BANK-ACCOUNT is
     vars A B : Oid .
     vars M N L : Nat .
 
-    *** Definition of transfer rewriting rule
+    --- Definition of transfer rewriting rule
     crl [transfer] :
       (from A to B transfer M)
       < A : Account | bal : N >
@@ -381,7 +391,7 @@ mod BANK-ACCOUNT is
          < B : Account | bal : L + M >
       if N >= M .
 
-    *** Definition of the initial configuration
+    --- Definition of the initial configuration
     op bankConf : -> Configuration .
     ops A-001 A-002 : -> Oid .
     eq bankConf
@@ -389,12 +399,13 @@ mod BANK-ACCOUNT is
       < A-002 : Account | bal : 1250 >
       (from A-002 to A-001 transfer 300) .
 endm
-\end{lstlisting}
+\end{maude}
 The system consists of different bank accounts, that can transfer money to each other. The bank account class is named as \texttt{Account}, and it contains the attribute \texttt{bal} which corresponds to the amount of money available in an account. The message \texttt{from\_to\_transfer\_} simulates the transfer request from one account to another, by specifying the two account object identifiers or Oid (one for the account that sends the money and the other one for the account that receives the money) and the amount of money to be sent as an integer. The rewrite rule \texttt{transfer} matches a system configuration where the message \texttt{from A to B transfer M} and the two accounts with Oid \texttt{A} and \texttt{B} are present. After that, the rule modifies the attribute \texttt{bal} of both accounts according to the transaction parameters and erases the message from the configuration. For example, if the initial configuration of the system is the one defined by \texttt{bankConf}, the result after using the rewriting command \texttt{rew in BANK-ACCOUNT : bankConf .} would be:
-\begin{lstlisting}
+\\
+\begin{maude2}
 result Configuration: < A-001 : Account | bal : 550 > 
                       < A-002 : Account | bal : 950 >
-\end{lstlisting}
+\end{maude2}
 
 \section{PMaude}
 %acknowledge the PMaude paper
@@ -406,26 +417,26 @@ Probabilistic Maude or PMaude \cite{Agha2006}, is a Maude extension that introdu
 \end{align*}
 Where $\overrightarrow{x}$ is the set of variables of the current model state,  $\overrightarrow{y}$ is the set of new variables accessible in the following model state and $C(\overrightarrow{x})$ is the conjunction of conditions over the set $\overrightarrow{x}$. Moreover, $l, l'$ are labels in $L$, $t,t'$ are terms written with $\Sigma$ and $\pi_r$ corresponds to the probability function assigned to the specific rule $r \in R$. 
 %provide the clock example and explain it
-Let's consider the PMaude module, presented in \cite{Agha2006}: 
-\begin{lstlisting}[mathescape=true]
+Let's consider the PMaude module, presented in \cite{Agha2006}: \\
+\begin{maude}[mathescape=true]
 pmod EXPONENTIAL-CLOCK is
-  *** the following imports positive real number module
+  --- import positive real number module
   protecting POSREAL .
 
-  *** the following imports PMaude module that defines 
-  *** the distributions EXPONENTIAL, BERNOULLI, GAMMA, etc.
+  --- imports PMaude module that defines
+  --- EXPONENTIAL, BERNOULLI, GAMMA, etc.
   protecting PMAUDE .
 
-  *** declare a sort Clock
+  --- declare a sort Clock
   sort Clock .
-  *** declare a constructor operator for Clock
+  --- declare a constructor operator for Clock
   op clock : PosReal PosReal => Clock .
-  *** declares a constructor operator for a broken clock
+  --- declares a constructor operator for a broken clock
   op broken : PosReal PosReal => Clock .
 
-  *** T is used to represent time of clock,
-  *** C represents charge in the clocks battery,
-  *** t represents time increment of the clock
+  --- T is used to represent time of clock,
+  --- C represents charge in the clocks battery,
+  --- t represents time increment of the clock
   vars T C t : PosReal . var B : Bool .
   
   rl [advance]: clock(T,C) =>
@@ -440,32 +451,37 @@ pmod EXPONENTIAL-CLOCK is
                 
   rl [reset]: clock(T,C) => clock(0.0,C) .
 endpm
-\end{lstlisting}
+\end{maude}
 This model represents a clock that works with a battery. The idea is to model the behavior of the clock, when the battery starts depleting: when the charge of the battery is high, then the probability that the clock breaks is low. Conversely, when the clock's battery is low, the clock has a higher probability of breaking. In this probabilistic system module, the clock is represented as a term \texttt{clock(T,C)}, where \texttt{T} is the time and \texttt{C} is the charge of the clock. The main probabilistic rewrite rule \texttt{advance} represents the "ticks" of the clock. If the boolean value \texttt{B} is true, then the clocks ticks normally and the new time will be the current time \texttt{T} plus an increment \texttt{t}. Also, the charge of the clock will be reduced by a thousandth of the current's clock's charge. If \texttt{B} is false, then the clock will break and change to the state \texttt{broken(T,C - $\frac{\texttt{C}}{1000}$)}. The constructor \texttt{broken} of sort \texttt{Clock}, represents the broken state of the clock. To incorporate the probabilistic choice of event for the clock's state (either ticking or breaking), the value \texttt{B} is chosen probabilistically, based on the charge of the clock. This is done by the \texttt{BERNOULLI} function, which receives a float number and returns a boolean value that is distributed according to the Bernoulli distribution with mean $\frac{\texttt{C}}{1000}$. Therefore, the lesser the charge left in the battery, the greater is the probability that the clock will break. The value \texttt{t} is also probabilistically determined, in this case, by an exponential distribution function.
 There is also a second rewriting rule, that resets the clock to its initial state \texttt{clock(0.0, C)}. It is important to remark that this model has both probabilistic and non-deterministic choice: The state of the clock depends on a probability function but the choice of rewriting rules is done non-dereministically by Maude's fair scheduler.
 
 PMaude modules can be transformed into regular system modules in Maude. This is done with three key modules: \texttt{COUNTER}, \texttt{RANDOM} and \texttt{SAMPLER}. The built-in \texttt{COUNTER} module in Maude consists of the rewriting rule
-\begin{lstlisting}
+\\
+\begin{maude}
 rl counter => N:Nat .
-\end{lstlisting}
+\end{maude}
 that rewrites the constant counter to a natural number. The module is built to guarantee that every time the constant counter is replaced with a natural number \texttt{N}, this natural number corresponds to the successor of the natural number obtained in the previous use of the rule. The built-in \texttt{RANDOM} module provides a random number generator function, called \texttt{random}. Lastly, the \texttt{SAMPLER} module specifies the sampling functions for different probability functions. For example, for the previous clock example, the needed functions will be:
-\begin{lstlisting}
+\\
+\begin{maude}
 op EXPONENTIAL : PosReal => PosReal .
 op BERNOULLI : PosReal => Bool .
-\end{lstlisting}
+\end{maude}
 that are defined as:
-\begin{lstlisting}
+\\
+\begin{maude}
 rl EXPONENTIAL(R) => (- log(rand)) / R .
 rl BERNOULLI(R) => if rand < R then true else false fi .
-\end{lstlisting}
+\end{maude}
 The value \texttt{rand} in both of the rules is defined as:
-\begin{lstlisting}
+\\
+\begin{maude}
 rl [rnd] : rand => float(random(counter + 1) / 4294967296) .
-\end{lstlisting}
+\end{maude}
 and it is rewritten in each step to a random number between 0 and 1. The number 4294967296 is used to divide the number returned by \texttt{random}, since it is the maximum number the function can return. The resulting Maude system module \cite{Agha2006} is:
-\begin{lstlisting}[mathescape=true]
+\\
+\begin{maude}
 mod EXPONENTIAL-CLOCK-TRANSFORMED is 
-  *** The SAMPLER mode includes the COUNTER and RANDOM modules
+  --- The SAMPLER mode includes the COUNTER and RANDOM modules
   protecting SAMPLER .
   protecting POSREAL .
   
@@ -483,9 +499,9 @@ mod EXPONENTIAL-CLOCK-TRANSFORMED is
   
   rl [reset]: clock(T,C) => clock(0.0,C) .
 endm
-\end{lstlisting}
+\end{maude}
 
-\section{VeStA, PVeStA, MultiVeStA and QuaTEx}
+\section{VeStA, PVeStA, MultiVeStA, QuaTEx and MultiQuaTEx}
 %explain what is VeStA
 VeStA \cite{Vesta} is a tool (implemented in Java) for statistical analysis of probabilistic systems. It supports statistical model checking and statistical evaluation of expected values of temporal expressions. These expressions can be constructed using the query language of  \textit{Quantitative Temporal Expression} or QuaTEx \cite{Agha2006}, and analyzed by VeStA using \textit{Monte Carlo simulations} . 
 %explain how VeStA works
@@ -507,12 +523,9 @@ The syntax of a QuaTEx expression is defined in figure \ref{fig:multivesta}. The
 
 Using the previous definition of QuaTEx queries, let's suppose that we want to find the expected value of a QuaTEx query \texttt{eval E[$PExp$]} using VeStA (we will refer to the expected value of the QuaTEx query obtained by VeStA as $\bar{x}$, and to the real expected value as $x$). To obtain $\bar{x}$, VeStA uses 2 user-defined parameters $\alpha$ and $\delta$. With these parameters, VeStA runs $n$ simulations, until $n$ is large enough to obtain a \textit{confidence interval} (CI) with probability $(1-\alpha) * 100\%$ bounded by $\delta$, i.e an interval $[\bar{x} - \frac{\delta}{2},\bar{x} + \frac{\delta}{2}]$ where the probability that $x \in [\bar{x} - \frac{\delta}{2},\bar{x} + \frac{\delta}{2}]$ is $(1-\alpha) * 100\%$. In other words, if VeStA calculates the expected value of a QuaTEx query as $\bar{x}$, then the probability that the real expected value of the query (represented as $x$) is in the interval $[\bar{x} - \frac{\delta}{2},\bar{x} + \frac{\delta}{2}]$, is $(1-\alpha) * 100\%$ (An example will be presented in the next section to illustrate this)
 
-Based on this, the authors in \cite{AlTurki2011} present an extension of VeStA called PVeStA. This tool allows to run parallelized algorithms for statistical model checking using a client-server architecture. Furthermore \cite{multivesta} presents an extension of both VeStA and PVeStA called MultiVeStA, that extends the QuaTEx language to MultiQuaTEx, by allowing to query more state measures at a time. This improves the usability and the performance of the language. The extension also integrates existing discrete event simulators in addition to the originally supported ones, and improves the presentation of results. 
+VeStA and Quatex have also seen many upgrades during time. For example, the authors in \cite{AlTurki2011} present an extension of VeStA called PVeStA. This tool allows to run parallelized algorithms for statistical model checking using a client-server architecture. Furthermore \cite{multivesta} presents an extension of both VeStA and PVeStA called MultiVeStA, that extends the QuaTEx language to MultiQuaTEx, by allowing to query more state measures at a time. This improves the usability and the performance of the language. The extension also integrates existing discrete event simulators in addition to the originally supported ones, and improves the presentation of results.
 
-%In the following section, an explanation of the use of %MultiVeStA will be given, to illustrate all the concepts %explained in this section.
-
-\section{Using MultiVeStA}
-The aim of this section is to provide a simple tutorial on how to use the MultiVeStA tool, since the information from the available sources is very limited. Generally speaking, the blueprint to modify and run any PMaude model to be used by MultiVeStA is:
+To illustrate how statistical analysis of probabilistic rewrite theories specified in Pmaude work, we'll use the MultiVeStA tool to run simulations over the clock model specified in the previous section and verify properties over it. To do this, the steps to modify and run the clock example are:
 \begin{enumerate}
     \item Define the PMaude model's states as configurations using object-oriented programming in Maude and define the system transitions as rewriting rules between configurations.
     \item Include the necessary elements of MultiVeStA inside the model's definition.
@@ -520,210 +533,162 @@ The aim of this section is to provide a simple tutorial on how to use the MultiV
     \item Define the MultiQuaTEx queries that represent the model's properties that want to be checked.
     \item Specify the simulation parameters.
     \item Run the simulations using the the probabilistic model, the MultiQuaTEx queries and the simulation parameters.
-\end{enumerate}
-We will walk-through this steps with a practical example, where we aim to verify properties over the PMaude model of the clock model presented in section 2.6. Before we start, it is important to mention that the version of the MultiVeStA tool used for this example can be found in \cite{multiTool}. In this GitHub page, the reader can find the instructions to download and run MultiVeStA. It is important that the reader runs the prepared \texttt{dice.maude} example and read the \texttt{README} file, to get to know the tool.
-\subsection{Step 1: Object-based clock example}
-First of all, we will start from the following specification of the clock model explained in section 2.6 (with file name \texttt{clock.maude}) taken from \cite{MaudeManual}:
-\begin{lstlisting}
-mod CLOCK is 
-  pr SAMPLER . 
-  sort Clock . 
-  op clock : Nat Float -> Clock [ctor] . 
-  op broken : Nat Float -> Clock [ctor] . 
-  var T : Nat . 
-  var C : Float . 
-  rl clock(T,C) => if sampleBernoulli(C / 1000.0) 
-     			   then clock(s(T), C - (C / 1000.0)) 
-                   else broken(T, C) 
-                   fi . 
-endm
-\end{lstlisting}
-To transform this specification into an object oriented one, we will divide it in different modules. The first one is the module \texttt{SORTS}, where the different sorts of the attributes of the configuration or class will be specified. In this case, a sort \texttt{State} that has two constants \texttt{working} and \texttt{broken}:
-\begin{lstlisting}
-mod SORTS is
-  sort State .
-  op working : -> State [ctor] .
-  op broken : -> State [ctor] .
-endm
-\end{lstlisting}
-The second module is \texttt{ATTRIBUTES}, where the attributes , the class identifier and the object identifier of the model's states are defined:
-\begin{lstlisting}
-mod ATTRIBUTES is
-  pr SORTS .
-  op Clock : -> Cid [ctor] .
-  op myClock : -> Oid [ctor] .
-  op time:_ : Nat -> Attribute [ctor] . 
-  op battery:_ : Float -> Attribute [ctor] . 
-  op state:_  : State -> Attribute [ctor] . 
-endm
-\end{lstlisting}
-The third module is \texttt{SCENARIO} where the initial state of the system is going to be defined. It is important to mention, that the name of the initial state must be \texttt{init}, so MultiVeStA can recognize it:
-\begin{lstlisting}
-mod SCENARIO is
-  pr ATTRIBUTES .
-  op init : -> Configuration .
-  eq init = < myClock : Clock  | time: 0, 
-              battery: 1000.0, state: working > . 
-endm
-\end{lstlisting}
-The fourth module, is the \texttt{DYNAMICS} module. This module will contain the conditional and unconditional rewriting rules of the model:
-\begin{lstlisting}
-mod DYNAMICS is
-  pr SCENARIO .
-  pr SAMPLER . *** Using the previously defined sampler
-  var cl : Oid .
-  var T : Nat .
-  var C : Float .
-  
-  rl [clockTick] :
+\end{enumerate} 
+For the first step, we will create a class named \texttt{Clock} defined as:
+\\
+\begin{maude}
+< Oid : Clock | time: Nat, battery: Float, state: State > .
+\end{maude}
+where the sort \texttt{State} is defined by two constants \texttt{working} and \texttt{broken}. The initial state of the system is then defined as:
+\\
+\begin{maude}
+< myClock : Clock  | time: 0, battery: 1000.0, state: working >
+\end{maude}
+And the rewrite rule that simulates the clock's ticks is:
+\\
+\begin{maude}
+rl [clockTick] :
     < cl : Clock  | time: T, battery: C, state: working > 
   =>
     if sampleBernoulli(C / 1000.0) then
-      < cl : Clock  | time: s(T), battery: (C - (C / 1000.0)), state: working >
+      < cl : Clock  | time: s(T), battery: (C - (C / 1000.0)),
+        state: working >
     else
       < cl : Clock  | time: T, battery: C, state: broken >
     fi .
-endm
-\end{lstlisting}
-The module \texttt{SAMPLER} is the same sampler module defined for the clock example in the PMaude section. If we include all this modules in the same file, named \texttt{clock.maude}, we can load the file to maude and apply the \texttt{rew} and \texttt{search} to verify and test the specification as one would normally do with other system modules. 
-
-\subsection{Step 2: Including MultiVeStA elements}
-First, in the \texttt{SORTS} module include the \texttt{APMAUDE} module that comes with the tool in the \texttt{apmaude.maude} file. The \texttt{APMAUDE} module includes other predefined Maude modules like \texttt{CONFIGURATION} (where the \texttt{Configuration} sort is renamed to \texttt{Config}), \texttt{NAT}, \texttt{FLOAT} and \texttt{STRING}. After that, for each one of the rewriting rules specified in \texttt{DYNAMICS}, create a constant, with the exact name of the label of the rule, of sort \texttt{Content} (The sort content is defined inside the \texttt{APMAUDE} module). The resulting \texttt{SORTS} module is:
-\begin{lstlisting}
-mod SORTS is
-  pr APMAUDE .
-  sort State .
-  op working : -> State [ctor] .
-  op broken : -> State [ctor] .
-  op clockTick : -> Content [ctor] .
-endm
-\end{lstlisting}
-Since the \texttt{APMAUDE} includes the modules \texttt{CONFIGURATION}, \texttt{NAT} and \texttt{FLOAT}, then in the \texttt{ATTRIBUTES} module is no longer necessary to include again these modules, because they will be included in \texttt{SORTS}. In the \texttt{SCENARIO} module, the initial configuration of the system must be modified to:
-\begin{lstlisting}
-mod SCENARIO is
-  pr ATTRIBUTES .
-  op init : -> Config .
-  eq init = {0.0 | [ 1.0 , (myClock <- clockTick),0] }
-            randomCounter(0)
-            < myClock : Clock  | time: 0, battery: 1000.0, state: working > . 
-endm
-\end{lstlisting}
-In this new \texttt{init} configuration there are 3 objects:
+\end{maude}
+In this model, instead of having the exponential function to determine the time increment, it will be fixed to 1. Afterwards, it is necessary to implement the structures required by MultiVeStA to run the simulations. This structures control the simulation's time and schedules the following rules to be applied. Then, the state observations can be defined. These observations correspond to the \texttt{rval($i$)} predicate defined in \cite{Agha2006,multivesta}, and for this example three \texttt{rval} predicates are going to be defined:
 \begin{itemize}
-    \item The first one is a construction used by MultiVeStA, and states that the initial time is 0.0, the initial event or rule to be applied is \texttt{clockTick} (which corresponds to the constant of type \texttt{Content} specified in the \texttt{SORTS} module) and it would be applied at time 1.0 to the object with Oid \texttt{myClock}.
-    \item The second object \texttt{randomCounter}is a counter used to generate pseudo-random numbers, and is initialized to 0. MultiVeStA also requires the definition of this object to run the simulations.
-    \item The third object corresponds to the same initial state of the model presented in the previous section.
+    \item \texttt{s.rval("eTime")}: returns the time value of the clock in state $s$, as a float number.
+    \item \texttt{s.rval("eBattery")}: returns the battery level of the clock in state $s$.
+    \item \texttt{s.rval("isBrk")}: returns 1.0 if the clock is \texttt{broken} in state $s$ or 0.0 if the clock is \texttt{working} in state $s$.
 \end{itemize}
-Finally, the module \texttt{DYNAMICS} must be modified to:
-\begin{lstlisting}
-mod DYNAMICS is
-  pr SCENARIO .
-  pr SAMPLER .
-
-  --- variables used for Multivesta processes
-  var gt : Float .  
-  var SL : ScheduleList .
-  var explCounter : Nat .
-
-  --- state variables
-  var cl : Oid .
-  var T : Nat .
-  var C : Float .
-
-
-  rl [clockTick] :
-    { gt | SL } (cl <- clockTick)
-    { < cl : Clock  | time: T, battery: C, state: working > 
-      randomCounter(explCounter) }
-  =>
-    if sampleBernoulli(explCounter, (C / 1000.0)) then
-      insert({ gt | SL },[ gt + 1.0 , (cl <- clockTick),0])
-      { < cl : Clock  | time: s(T), battery: (C - (C / 1000.0)), state: working > 
-        randomCounter(s(explCounter)) }
-    else
-      insert({ gt | SL },[ gt + 1.0 , (cl <- clockTick),0])
-      { < cl : Clock  | time: T, battery: C, state: broken > 
-        randomCounter(s(explCounter)) }
-    fi .
-
-endm
-\end{lstlisting}
-This new module includes the following changes:
-\begin{itemize}
-    \item The protected \texttt{SAMPLER} module corresponds to the sampler defined in the \texttt{apmaude.maude} file. This new sampler uses a counter to generate random number. That is why the new call of the function \texttt{sampleBernoulli} has an additional parameter \texttt{explCounter}.
-    \item A new set of variables needs to be declared to match the structures that MultiVeStA uses in the rewriting rule.
-    \item The \texttt{clockTick} rule needs to be modified to incorporate the needed elements so MultiVeStA can function correctly:
-    \begin{itemize}
-        \item The first one is \texttt{\{ gt | SL \} (cl <- clockTick)} which means that in the current state configuration the rule \texttt{clockTick} is "called". Also, the \texttt{randomCounter} and the system's state represented by the clock object need to be inside \{\} to function correctly. 
-        \item The next system configuration needs to include the object \texttt{insert(\{ gt | SL \},[ gt + 1.0 , (cl <- clockTick),0])} and \\ \texttt{randomCounter(s(explCounter))}, since they are necessary to tell MultiVeStA to advance the time of the simulation, specify what is the next rule to apply (in this case it is \texttt{clockTick}) and update the counter that is used to generate pseudo-random numbers. Both the \texttt{randomCounter} and the system state need to be grouped by the symbols \{\}. 
-    \end{itemize}
-\end{itemize}
-
-\subsection{Step 3: Defining state observations}
-Let's suppose that the properties that are going to be checked using MultiVeStA for the clock model, are the expected value of the clock's time and battery when it breaks. To verify these values, it is necessary to access during simulations to the state of the model using the real-typed predicate \texttt{rval}, explained in \cite{multivesta}. One way of doing it, is by defining a new module \texttt{ANALYSYS} where the necessary operators and equations to create the \texttt{rval} predicates are defined:
-\begin{lstlisting}
-mod ANALYSYS is
-  pr DYNAMICS .
-  
-  var Con : Config .
-  var gt : Float .
-  var SL : ScheduleList .
-  var attrSet : AttributeSet .
-  var cl : Oid .
-  var T : Nat .
-  var C : Float .
-  var S : State .
-
-  op extractTime : Config -> Nat .
-  eq extractTime(< cl : Clock | time: T, attrSet > Con) = T .
-
-  op extractBattery : Config -> Float .
-  eq extractBattery(< cl : Clock | battery: C, attrSet > Con) = C .
-
-  *** returns 1.0 if the clock is broken, 0.0 if not
-  op isBroken : Config -> Float .
-  eq isBroken(< cl : Clock | state: broken, attrSet > Con) = 1.0 .
-  eq isBroken(< cl : Clock | state: working, attrSet > Con) = 0.0 .
-
-  *** Eval the time of the clock
-  eq val("eTime", {Con} {gt | SL}) = float(extractTime(Con)) .
-  *** Eval the battery of the clock
-  eq val("eBattery", {Con} {gt | SL}) = extractBattery(Con) .
-  *** Eval if the clock is broken
-  eq val("isBrk", {Con} { gt | SL}) = isBroken(Con) .
-endm
-\end{lstlisting}
-The operator \texttt{val} represents the \texttt{rval} predicate. It takes as input a string or a natural number, that identifies the predicate (e.g. "eTime", "eBattery" and "isBrk") and the current system state. The output value of \texttt{val} must be of sort \texttt{Float} and represents the \texttt{Float} value of a system observation. \texttt{val("eTime")} returns the current time of the clock, \texttt{val("eBattery")} returns the current battery level of the clock and \texttt{val("isBrk")} checks if in the current state the clock is broken. 
-
-\subsection{Step 4: Defining MultiQuaTEx formulas}
-As mentioned before, the properties to be checked are:
-\begin{enumerate}
-    \item What is the expected value of time when the clock breaks?
-    \item What is the expected value of the battery when the clock breaks?
-\end{enumerate}
-The MultiQuaTEx files defined for query 1 and 2 are named as \texttt{probTime.} \texttt{multiquatex} and \texttt{probBattery.multiquatex} respectively. The first contains the following query:
-\begin{lstlisting}
+Using these predicates, two MultiQuaTEx formulas are defined:
+\\
+\begin{maude2}
 PTime() = if ( s.rval("isBrk") == 1.0 ) 
           then s.rval("eTime") else # PTime() fi ;
-
 eval E[ PTime() ] ;
-\end{lstlisting}
-Using the MultiQuaTEx syntax, It states that the if the clock is broken (i.e. \texttt{s.rval("isBrk") == 1.0}) then return the current time of the clock (i.e. \texttt{s.rval("eTime")}). If not, the query recursively calls itself in the following system state (i.e. \texttt{\# PTime()}). The other query is the same as the previos one, but instead of \texttt{s.rval("eTime")} is \texttt{s.rval("eBattery")}:
-\begin{lstlisting}
+
+------------------------------------------------------------
+
 PBattery() = if ( s.rval("isBrk") == 1.0 ) 
              then s.rval("eBattery") else # PBattery() fi ;
-
 eval E[ PBattery() ] ;
-\end{lstlisting}
-MultiQuaTEx allows the user to construct more complex queries, for instance, by defining temporal operators. The reader can refer to \cite{multivesta} to get more details on the QuaTEx's and MultiQuaTEx's syntax.
+\end{maude2}
+The first formula states that the if the clock is broken (i.e. \texttt{s.rval("isBrk") == 1.0}) then return the current time of the clock (i.e. \texttt{s.rval("eTime")}). If not, the query recursively calls itself in the following system state (i.e. \texttt{\# PTime()}). The other query has the same behavior as the previous one, but instead of \texttt{s.rval("eTime")} is \texttt{s.rval("eBattery")}. Therefore, the answer returned by the first query corresponds to the expected value of the clock's time when it breaks, and the answer returned by the second query is the expected value of the clock's battery when it breaks. After the simulations were executed with the clock probabilistic model, both MultiQuaTEx formulas and parameters $\alpha = 0.05$ and $\delta = 1$, the obtained results for both queries were:
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|l|}
+\hline
+Property & ObtainedValue    & Variance         & CI                 \\ \hline
+PTime()  & 39.7909482758621 & 422.729500809641 & 0.999968586222357         \\ \hline
+\end{tabular}
+\end{table}
+%----------------------------------------------------------
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|l|l|}
+\hline
+Property   & ObtainedValue   & Variance         & CI                 \\ \hline
+PBattery() & 961.13204082891 & 387.863387550541 & 0.999651593005253 \\ \hline
+\end{tabular}
+\end{table}
 
-\subsection{Step 5: Running simulations}
+This means that the expected value of the time when the clock breaks has a probability of $(1-\alpha)*100\% = 95\%$ to be inside the interval $[\frac{\delta}{2} - 39.79, \frac{\delta}{2} + 39.79] = [39.29, 40.29]$, and the expected value of the battery level when the clock breaks has a probability of $(1-\alpha)*100\% = 95\%$ to be inside the interval $[\frac{\delta}{2} - 961.13, \frac{\delta}{2} + 961.13] = [960.63, 961.63]$.
 
+%----------------------
 
+\section{A Rewriting Logic Semantics for Probabilistic Event-B}
+The rewriting logic approach to probabilistic Event-B \cite{Olarte}, introduces a method for translating probabilistic Event-B models to PMaude models that are executable in PVeStA. Formally speaking, it is a map $[[ \cdot ]]: \mathscr{M} \rightarrow \mathscr{R}_\mathscr{M}$ from a probabilistic event machine to a probabilistic rewrite theory. There are two main steps for this transformation:
 
+\begin{enumerate}
+    \item The first one is to specify a rewrite theory $\mathscr{R}$ that defines the types, sets, constants of the Event-B's context, and the infrastructure needed to encode variables and events of a probabilistic Event-B machine.
+    \item After that, $\mathscr{R}$ is extended with equations and rewrites rules that correspond to the events in the machine $\mathscr{M}$.
+\end{enumerate}
+This rewrite theory $\mathscr{R}$, is constructed with two main components: A Maude specification of an Event-B context and an Event-B machine. The Maude version of the context is:
+\\
+\begin{maude}
+mod EBCONTEXT is 
+  pr CONFIGURATION . pr EB-TYPE  . pr MAP{Qid, EBSet} . pr MAP{Qid, EBType} .
+  --- Names for contexts
+  subsort Qid < Oid .
+  --- Class for contexts
+  op Context  : -> Cid . 
+  --- Context's user-defined sets
+  op sets :_      : Map{Qid , EBSet}  -> Attribute .
+  --- Context's constants
+  op constants :_ : Map{Qid , EBType} -> Attribute .
+  --- Building a context
+  op init-context : Qid -> Object .                         
+  var Q : Qid .
+  eq init-context(Q) = < Q : Context | sets : init-sets,
+                         constants : init-constants  > .
+  --- Operators to be instantiated by the implementation of the context
+  op init-sets : ->  Map{Qid , EBSet} . --- Building deferred sets
+  op init-constants : ->  Map{Qid , EBSet} . --- Initializing constants 
+endm
+\end{maude}
 
+Where \textit{EBTYPE} encodes the values of the model constants, by wrapping all the possible types a constant can have and \textit{EBSet} contains the definition of finite set. This Maude version of the context is based on the \textit{CONFIGURATION} theory, which specifies an object oriented programming method in Maude (the reader can refer to \cite{MaudeManual} chapter 8 for a in depth explanation). In general, an object $O$ of class $C$ is represented by a structure of the form $<O:C \; | \; a_1 : v_1 , ... , a_n:v_n>$ where $a_i$ are attributes identifiers and $v_i$ are terms that represent the current values of the attributes. Therefore, a context is represented as an object of the class \textit{Context}, with two attributes that are \textit{sets} and \textit{constants}. the attribute \textit{sets} contains all the sets identifiers paired with their respective values, and  \textit{constants} contains all the constant identifiers paired with their respective values. The context attributes' values are initialized using the \textit{init-context, init-sets} and \textit{init-constants} operators. In case of the Event-B machine, it is represented with the following Maude specification:
+\\
+\begin{maude}
+mod EBMACHINE is
+  inc EBCONTEXT  . --- Context specification. 
+  op Machine  : -> Cid . --- Class for machines
+  op variables :_ : Map{Qid , EBType} -> Attribute . --- Machine's variables 
+  op init-variables : ->  Map{Qid , EBType} . --- Instantiated by the machine at hand
+  op init-machine : Qid Qid -> Object . --- Initial state of the machine
+  vars QM QC : Qid .
+  --- Configuration defining the machine QM and its context QC
+  eq init-machine(QC, QM)  = 
+                  init-context(QC)                              --- Context 
+                  < QM : Machine | variables : init-variables > --- Variables
+                  < events : Events | state: init-events >.     --- Events 
+[...] --- event specification explained below
+\end{maude}
+Like the context, the machine is also represented using object-oriented programming in Maude. A machine is an object of the class \textit{Machine} with only one attribute \textit{variables}, that correspond to all the variable identifiers paired with their respective value. The previously explained definitions for the Maude version of context and machine, correspond to the rewrite theory $\mathscr{R}$, which can be extended in two steps, to obtain $\mathscr{R}_\mathscr{M}$: adding the initialization event, that will fill the initial configuration of the model with the initial values of all the variables, and the second step is to add the different equations and rewrite rules that encode the probabilistic Event-B events. The former is represented as an equation that initializes \textit{init-variables}, of the form:
+\\
+\begin{maude}
+    eq init-variables = ('v1 |-> val1, ... , ('vn   |-> valn)
+\end{maude}
 
-\section{A Rewriting Logic Semantics and Statistical Analysis for Probabilistic Event-B}
+Where every $v_1 ... v_n$ are the model's variables and $val_1..val_n$ are their corresponding values. The latter is achieved by:
+
+\begin{enumerate}
+    \item A deterministic mechanism that determines if an event is enabled or not, given the current state of the machine
+    \item A probabilistic rule that chooses the next event to be executed, according to the weights of the enabled events
+    \item For each event, a rule that chooses probabilistically the value of the event parameters and probabilistic assignments. After that, the state of the machine is updated accordingly. This rule corresponds to an observable transition of the machine $\mathscr{M}$.
+\end{enumerate}
+\textbf{Events' states (1)} The possible states for an event are defined as:
+\\
+\begin{maude}
+ sort EvState . --- States of events
+ ops blocked unknown execute : -> EvState . 
+ op enable : NzNat -> EvState . --- Enable with a given weight w > 0
+\end{maude}
+where \textit{blocked} means that the event can't be executed in the current machine configuration, \textit{unknown} means that the event's state hasn't been computed, \textit{execute} implies that the event will be executed in the following transition and \textit{enable} states that an event is enabled for execution in the given machine configuration, with an specific weight. The definition for an event is:
+\\
+\begin{maude}
+   sort Event LEvent . --- Events and list of events
+   op ev : Qid EvState -> Event . --- ID of the event and its state
+   op state:_ : LEvent -> Attribute . --- Attribute for objects of class Events   
+   op init-events : -> LEvent . --- To be instantiated by the machine at hand
+\end{maude}
+Each event has the form $ev(e_i, st_i)$, where $e_i$ is the event identifier and $st_i$ is the state of the event. When the machine is initialized, every event $e_i$ (represented as the event list \textit{init-events}) starts as $ev(e_i, unknown)$. In the following machine configurations, the events' states are updated deterministically with an equation from \textit{unknown} to \textit{enabled} or \textit{blocked}, depending on the guards of the event and the current state of the machine.
+
+\textbf{Determine next event to execute (2)} In order to probabilistically select the next event that will be executed, using the event weights of the enabled events, the following conditional rule is used:
+\begin{maude}
+crl [next-event] :  < events : Events | state: LE > => 
+                    < events : Events | ev(pick(LEA, rand(max-value(LEA))), execute) >
+if     all-ready(LE)              --- All e in LE is in state either blocked or enabled 
+   /\  one-firable(LE)            --- At least one event is enabled 
+   /\  LE' := filter(LE)          --- Extract the enabled events
+   /\  LEA := accumulate(LE') .   --- Accumulate the weights 
+\end{maude}
+this rule states that if there exists one or more enabled events (no deadlock), then one of the enabled events is picked, following a uniform distribution on the interval $[0, W)$ where $W$ is the sum of all the weights of enabled events. The state of the selected event will the be changed to \textit{execute}.
+
+\textbf{Actions in events (3)} After an event is chosen for execution, the variable values need to change according to the event actions. Both deterministic an probabilistic assignments can be done  by simply changing the state configuration using a standard rewrite rule, with the slight difference that for probabilistic assignments or assignments that involve a parameter, a function that simulates a uniform distribution (like the one used for selecting events) will be used to select the new variable value or the value of the parameter in the assignment.
 
 \section{Rodin and Plugin Development}
 

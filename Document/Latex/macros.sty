@@ -7,6 +7,11 @@
 \usepackage{esvect}
 \usepackage[parfill]{parskip} %avoid paragraph identation
 \usepackage{mathrsfs} %for the R in rewrite theory
+\usepackage{float} %to force table to stay in place
+\usepackage{xcolor}
+\usepackage{a4wide} %increase the width of the page
+
+
 
 \usepackage{graphicx}
 \graphicspath{ {images/} }
@@ -31,8 +36,63 @@
 %-----------------------------------------
 
 %maude environment------------------------
+\definecolor{darkred}{rgb}{0.6,0,0}
+\definecolor{coloract}{rgb}{0.50,0.70,0.30}
+\definecolor{colorclock}{rgb}{0.4,0.4,1}
+\definecolor{colorloc}{rgb}{0.4,0.4,0.65}
+\definecolor{colorparam}{rgb}{1,0.6,0.0}
 
+\lstdefinelanguage{Maude}{%
+    keywords={
+        , mod, fmod, endm, endfm
+        , view, endv
+        , is
+        , pr , protecting
+        , ex , extending
+        , inc, including
+        , sort, sorts, subsort, subsorts
+        , var, vars
+        , op, ops
+        , eq, ceq
+        , rl, crl
+        , if
+        , search
+        , smt-search
+        , srew
+        , red, reduce
+        , fth, endfth
+        , then, else, fi
+    }
+    , alsoletter={-}
+    , keywordstyle=\color{blue}
+    , basicstyle=\ttfamily\small
+    , comment=[l]{---}
+    , commentstyle=\color{darkred}\ttfamily,
+    , columns=flexible
+    , numbers=none
+    , showstringspaces=false
+    , keepspaces=true
+    , aboveskip=-3pt
+    , mathescape=true
+}
+
+\lstnewenvironment{maude}{\lstset{language=Maude}}{}
 %------------------------------------------
+
+%maude output------------------------
+\lstdefinelanguage{Maude2}{%
+      basicstyle=\ttfamily\small
+    , columns=flexible
+    , numbers=none
+    , showstringspaces=false
+    , keepspaces=true
+    , aboveskip=-3pt
+    , mathescape=true
+}
+
+\lstnewenvironment{maude2}{\lstset{language=Maude2}}{}
+%------------------------------------------
+
 
 
 
