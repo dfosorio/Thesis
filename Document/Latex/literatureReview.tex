@@ -1,8 +1,37 @@
 \chapter{Literature Review}
-The main purpose of this chapter is to present the needed theoretical and technical background to understand how the plugin works. Therefore, a short but sufficient definition of various concepts and tools will be given. In terms of theoretical context, this chapter will discuss topics like  Event-B, Maude and the rewriting logic approach to Event-B. Furthermore, this chapter will also provide some insight into plugin development in Rodin. To guide the reader through the different sections of this chapter and facilitate their reading, the following section dependency is given:
+The main purpose of this chapter is to present the needed theoretical and technical background to understand how the tool in \cite{tool.website} and the plugin work. Therefore, a short but sufficient definition of various concepts and tools, like the Event-B method, Maude, rewriting logic, VeStA and others, will be given. To guide the reader through the different sections of this chapter and facilitate its reading, the following section dependency is given:
 
-%insert image of section dependencies
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[
+roundnode/.style={circle, draw=blue!60, fill=green!5, very thick, minimum size=7mm},
+squarednode/.style={rectangle, draw=red!60, fill=red!5, very thick, minimum size=5mm},
+]
+%Nodes
+\node[roundnode] (main) {2.8};
+\node[roundnode] (n1) [above left=of main] {2.3};
+\node[roundnode] (n2) [left=of n1] {2.2};
+\node[roundnode] (n3) [left=of n2] {2.1};
 
+\node[roundnode] (n4) [below left=of main] {2.7};
+\node[roundnode] (n5) [left=of n4] {2.5};
+\node[roundnode] (n6) [left=of n5] {2.4};
+\node[roundnode] (n7) [below=of n2] {2.6};
+
+%Lines
+\draw[->] (n3.east) -- (n2.west);
+\draw[->] (n2.east) -- (n1.west);
+\draw[->] (n1.east) .. controls +(right:7mm) and +(up:7mm) .. (main.north);
+%-------------------------------------------------------------
+\draw[->] (n4.east) .. controls +(right:7mm) and +(down:7mm) .. (main.south);
+\draw[->] (n5.east) -- (n4.west);
+\draw[->] (n6.east) -- (n5.west);
+\draw[->] (n7.east) .. controls +(right:7mm) and +(up:7mm) .. (n4.north);
+\draw[->] (n6.north) .. controls +(up:7mm) and +(left:7mm) .. (n7.west);
+\end{tikzpicture}
+    \caption{Section dependencies}
+    \label{fig:sectionDependency}
+\end{figure}
 
 \section{Event-B}
 %explain what event B is generally
@@ -17,7 +46,7 @@ In terms of syntax, the general structure for contexts is expressed in figure \r
     \item The "axioms" clause introduces the list of axioms that the model must satisfy. The Axioms are a conjunction logic predicates over sets $\bar{s}$ and constants $\bar{c}$ defined as $A(\bar{s},\bar{c})$. These logic predicates state the properties that the constants and sets must meet.
     \item The "theorems" clause lists some logic predicates, that must be proved within the context using the axioms. These are logic predicates defined as $T_i(\bar{s},\bar{c})$.
 \end{itemize}
-\begin{figure}[h]
+\begin{figure}
     \centering
     \includegraphics[scale = 0.3]{images/eventb2.PNG}
     \caption{Context structure, taken from \cite{Abrial2011}}
@@ -26,7 +55,7 @@ In terms of syntax, the general structure for contexts is expressed in figure \r
 
 %explain what a Machine is and syntax
 The general structure of the machine is specified in figure \ref{fig:eventb3}.  
-\begin{figure}[h]
+\begin{figure}
     \centering
     \includegraphics[scale = 0.4]{images/eventb3.PNG}
     \caption{Machine structure, taken from \cite{Abrial2011}}
@@ -40,7 +69,7 @@ Each one of its components correspond to:
     \item The clause "variables" lists all the variables of the system. The set of variable identifiers is defined as $\bar{v} = \{v_1...v_n\}$.
     \item The "invariants" clause lists all the invariants that the model must satisfy. Invariants are represented as a conjunction of logic predicates over variables $\bar{v}$, defined as $I(\bar{v})$. These invariants define the properties that the variables must hold in every configuration or state of the system.
     \item The "theorems" clause lists all the theorems. Each theorem is a logic predicates that must be proven using the axioms of the context and the invariants of the machine. They have the form $T_i(\bar{v})$.
-    \item The "variant" clause is used when machines have \textit{convergent events}. It specifies an expression $V(\bar{v})$ over the variables used for proving convergence of the model, i.e. proving that the model doesn't loops forever.
+    \item The "variant" clause is used when machines have \textit{convergent events}. It specifies an expression $V(\bar{v})$ over the variables used for proving convergence of the model.
     \item The "events" clause lists the events of the model. Each event represents a system transition, that changes the current system state to another.
 \end{itemize}
 Events are very important components of an Event-B model and they have the following structure:
@@ -62,13 +91,14 @@ event assignments can be categorized in three types:
 \end{itemize}
 The set of events of a model is called as $Evts$. This set includes the \textit{INITIALISATION} event or $Init$, which assigns the initial value to all the variables of the machine and creates the initial state of the model. A whole Event-B model can be represented as a context $\mathscr{C} = (\bar{s},\bar{c}, A(\bar{s},\bar{c}))$ and a machine $\mathscr{M} =(\bar{v}, I(\bar{v}), V(\bar{v}), Evts, Init)$.
 %provide a simple example
-To clarify this notation, an example of an Event-B model of a brake system, presented in \cite{Aouadhi2017}, will be used. A brake system consists of two parts: a pedal and a brake. The pedal can be up or down, and the brake can be applied or released. When the pedal is up, the brake is released. When the pedal is down, the brake is then applied. The resulting Event-B specification for such model is represented in figure \ref{fig:brake1} and \ref{fig:brake2}.\begin{figure}[h]
+To clarify this notation, an example of an Event-B model of a brake system, presented in \cite{Aouadhi2017}, will be used. A brake system consists of two parts: a pedal and a brake. The pedal can be up or down, and the brake can be applied or released. When the pedal is up, the brake is released. When the pedal is down, the brake is then applied. The resulting Event-B specification for such model is represented in figure \ref{fig:brake1} and \ref{fig:brake2}.
+\begin{figure}[H]
     \centering
     \frame{{\includegraphics[scale = 0.3]{images/eventb4.PNG} }}
     \caption{Context of the brake example}
     \label{fig:brake1}
 \end{figure}
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \subfloat{\frame{{\includegraphics[scale = 0.3]{images/eventb5.PNG} }}}
     \quad
@@ -96,8 +126,8 @@ When an Event-B model is simulated or verified, there exists the possibility tha
     \item \textbf{Choice of parameter values:} In an event with parameters, it is possible to have multiple valuations for parameters $\bar{t}$ such that the guard of the event $G_i(\bar{t}, \bar{v})$ is satisfied. Therefore, the parameter that will be used in the execution of the event is chosen non-deterministically
     \item \textbf{Non-Deterministic assignments:} As mentioned before, there are 3 types of event assignments: deterministic assignment, predicate assignment and enumerated assignment. Both predicate and enumerated assignments, are non-deterministic for the following reason:
     \begin{itemize}
-        \item Predicate assignment $x :\! | \; Q(\bar{t}, \bar{v}, x, x')$: means that the variable $x$ is assigned the value $x'$ that satisfies the predicate $Q(\bar{t}, \bar{v}, x, x')$. When there are multiple $x'$ values that satisfy the predicate, then the new value of $x$ is chosen non-deterministically.
-        \item Enumerated assignment $x :\in  \{ E_1(\bar{t},\bar{v})... E_n(\bar{t},\bar{v}) \}$: states that to the variable $x$, one of the multiple expressions $E_i(\bar{t},\bar{v})$ in the set is assigned to it. This choice of which expression will be chosen, is done non-deterministically. 
+        \item Predicate assignment $x :\! | \; Q(\bar{t}, \bar{v}, x, x')$: states that to the variable $x$, the value $x'$ that satisfies the predicate $Q(\bar{t}, \bar{v}, x, x')$, is assigned. When there are multiple $x'$ values that satisfy the predicate, then the new value of $x$ is chosen non-deterministically.
+        \item Enumerated assignment $x :\in  \{ E_1(\bar{t},\bar{v})... E_n(\bar{t},\bar{v}) \}$: states that to the variable $x$, one of the multiple expressions $E_i(\bar{t},\bar{v})$ in the set is assigned to it. The selection of which expression will be assigned, is done non-deterministically. 
     \end{itemize}
 \end{itemize}
   
@@ -106,8 +136,8 @@ When an Event-B model is simulated or verified, there exists the possibility tha
 \section{Probabilistic Event-B}
 Based on the 3 types of non-determinism present in Event-B, probabilistic Event-B \cite{Aouadhi2017} introduces probabilistic choices to replace non-deterministic ones in the following way:
 \begin{itemize}
-    \item \textbf{Probabilistic choice of enabled events:} To solve the non-determinisim, an expression $W_i(\bar{v})$ over the variables represents the \textit{weight} of a specific event $e_i$. Therefore, when multiple events are enabled, the probability of choosing one of them will be the ratio of its weight over the sum of all the weights of enabled events. This means that if there are $n$ events, then the probability of choosing event $e_i$ is $P(e_i) = \frac{W(e_i)}{\sum^{n}_{j = 1}W(e_j)}$
-    \item \textbf{Probabilistic choice of parameter values:} In order to choose a parameter value probabilistically, a discrete uniform distribution can be used as a default choice to assign probabilities to the parameters. For that reason, the probability of choosing a parameter valuation $P(t_i) = \frac{1}{n}$ where $n$ is the number of parameter valuations that satisfy the guard of the event.
+    \item \textbf{Probabilistic choice of enabled events:} To solve the non-determinisim, an expression $W_i(\bar{v})$ over the variables represents the \textit{weight} of a specific event $e_i$. Therefore, when multiple events are enabled, the probability of choosing one of them will be the ratio of its weight over the sum of all the weights of enabled events. This means that if there are $n$ enabled events, then the probability of choosing event $e_i$ is $P(e_i) = \frac{W(e_i)}{\sum^{n}_{j = 1}W(e_j)}$
+    \item \textbf{Probabilistic choice of parameter values:} In order to choose a parameter value probabilistically, a discrete uniform distribution can be used as a default choice to assign probabilities to the parameters. For that reason, the probability of choosing a parameter valuation is $P(t_i) = \frac{1}{n}$ where $n$ is the number of parameter valuations that satisfy the guard of the event.
     \item \textbf{Predicate probabilistic assignment:} A predicate probabilistic assignment written as $x:\! \oplus \; Q(\bar{t}, \bar{v}, x, x')$ chooses the new value of $x$ with a uniform distribution. Hence, the probability of choosing a variable value $x'_i$ is $P(x'_i) = \frac{1}{n}$ where $n$ is the number of variable valuations that satisfy the predicate $Q(\bar{t}, \bar{v}, x, x')$. This probabilistic assignment replaces the non-deterministic predicate assignment. 
     \item \textbf{Enumerated probabilistic assignment:} A enumerated probabilistic assignment written as $x := E_1(\bar{t},\bar{v})@_{p_1}\oplus...\oplus E_n(\bar{t},\bar{v})@_{p_n}$  assigns a specific probability $p_i$ to each expression $E_i$, where $0 < p_i \leq 1$ and $p_1 + ... + p_n = 1$. This probabilistic assignment replaces the non-deterministic enumerated assignment.
 \end{itemize}
@@ -126,7 +156,7 @@ Where $W( \bar{v})$ is an expression over the variables that determines the weig
 The resulting probabilistic model is displayed in figure \ref{fig:brake3}. This new model incorporates all of the previously defined constraints in the following way:
 \begin{itemize}
     \item Constraints \textbf{R1} and \textbf{R2} are modeled in the probabilistic event \textit{PushPedal}, in which an enumerated probabilistic assignment is used to assign the value of variable \textit{pedal}. This assignment $pedal := down \ @9/10  \ \oplus \ up \ @1/10$ states that when the event \textit{PushPedal} is executed, the probability of changing its value to \textit{down} is $90\%$ and the probability of remaining with the value \textit{up} is $10\%$.
-    \item For \textbf{R4}, a new constant \textit{MAX\_WEAR} $\in \mathbb{N}$ and \textit{MAX\_WEAR} $> 1$, is introduced to the context of the model. This constant determines the maximum number of times the break can be applied. In addition, the variable \textit{wear} $\in \mathbb{N}$ tracks the number of times the brake has been used. To make sure that the number of times the break has been applied doesn't exceeds the maximum wear, i.e. \textit{wear} $<$ \textit{MAX\_WEAR}, the weights of probabilistic events \textit{ApplyBrake} and \textit{ReleaseBrake} are modeled by the expression \textit{MAX\_WEAR} $-$ \textit{wear}. Therefore, when \textit{MAX\_WEAR} $=$ \textit{wear}, the weight of both events will be 0. This will make their probability of execution also 0, based on how probabilistic choice of enabled events is calculated.
+    \item For \textbf{R4}, a new constant \textit{MAX\_WEAR} s.t. \textit{MAX\_WEAR} $\in \mathbb{N}$ and \textit{MAX\_WEAR} $> 1$, is introduced to the context of the model. This constant determines the maximum number of times the break can be applied. In addition, the variable \textit{wear} $\in \mathbb{N}$ tracks the number of times the brake has been used. To make sure that the number of times the break has been applied doesn't exceeds the maximum wear, i.e. \textit{wear} $<$ \textit{MAX\_WEAR}, the weights of probabilistic events \textit{ApplyBrake} and \textit{ReleaseBrake} are modeled by the expression \textit{MAX\_WEAR} $-$ \textit{wear}. Therefore, when \textit{MAX\_WEAR} $=$ \textit{wear}, the weight of both events will be 0. This will make their probability of execution also 0, based on how probabilistic choice of enabled events is calculated.
     \item To model \textbf{R3}, a new event \textit{ApplyBrakeFailure} is introduced. When executed, this event simulates brake failure, by leaving the brake in state \textit{released}, when the pedal is \textit{down}.
     \item Finally, the constraint \textbf{R5} is defined by the weights of event \textit{ApplyBrake} and \textit{ApplyBrakeFailure}. As mentioned before, the weight of event \textit{ApplyBrake} is modeled with the expression \textit{MAX\_WEAR} $-$ \textit{wear}, and the expression for the weight of event \textit{ApplyBrakeFailure} is \textit{wear}. Thus, when the value of variable \textit{wear} increases, then the probability of executing event \textit{ApplyBrake} decreases and the probability of \textit{ApplyBrakeFailure} increases. 
     
@@ -152,7 +182,6 @@ The resulting probabilistic model is displayed in figure \ref{fig:brake3}. This 
 Maude \cite{MaudeManual, PeterMaude, Lecture1} is a high performance declarative language, that allows the specification of programs or systems, and their formal verification.
 %explain how Maude program are written in functional module (sorts, subsorts, ops, etc, equations and equation evaluation)
 Maude's programs are represented as \textit{functional modules} declared with syntax: \\
-
 \begin{maude}
 fmod MODULENAME is
     BODY
@@ -173,12 +202,12 @@ fmod NAT-ADD is
 
   vars N M : Nat .
     
-  *** Recursive Definition for addition
+  --- Recursive Definition for addition
   eq N + 0 = N .
   eq N + s(M) = s(N + M) .
 endfm
 \end{maude}
-The sort \texttt{Nat} is a data type that represents the natural numbers. This sort has two constructors (represented in the code with the key word \texttt{ctor}): 0 which is a constant and the operator \texttt{s}, which takes one argument of type \texttt{Nat} and represents the successor function in the natural numbers. With these two operators, it is possible to define arithmetic functions in the natural numbers, like addition or multiplication. In this module, both functions are defined inductively using equations. Using this module, it is possible to compute the value for addition or multiplication for two natural numbers using the command \texttt{red}. For example, if the command \texttt{red s(s(s(0))) + s(s(0))} is used, that represents the operation 3 + 2, the answer 5 is obtained represented as \texttt{s(s(s(s(s(0)))))}:
+The sort \texttt{Nat} is a data type that represents the natural numbers. This sort has two constructors (represented in the code with the key word \texttt{ctor}): 0 which is a constant and the operator \texttt{s}, which takes one argument of type \texttt{Nat} and represents the successor function in the natural numbers. With these two operators, it is possible to define arithmetic functions in the natural numbers, like addition. In this case, the operation is defined inductively using 2 equations. Using this module, it is possible to compute the value for addition for two natural numbers using the command \texttt{red}. For example, if the command \texttt{red s(s(s(0))) + s(s(0))} is used (the command represents the operation 3 + 2), the answer 5 is obtained represented as \texttt{s(s(s(s(s(0)))))}:
 \\
 \begin{maude2}
 *********** equation
@@ -280,14 +309,14 @@ mod BUS is protecting NAT .
 endm
 \end{maude}
 %explain how the maude model corresponds to the theory
-In this model the states of the system are represented with instances of the sort \texttt{Bus}, and it contains a natural number that represents the number of people inside the bus and a \texttt{Status}, which represents the state of the bus (it can be stationary or moving). In this case, no equations are used, therefore the set of equations $E = \emptyset$  and $\Sigma$ will contain the sorts \texttt{Bus} and \texttt{Status} with their respective operators. To model the different events in the model, 4 rewriting rules were used:
+In this model the states of the system are represented with instances of the sort \texttt{Bus}. They contain a natural number that represents the number of people inside the bus and a \texttt{Status}, which represents the state of the bus (it can be stationary or moving). In this case, no equations are used, therefore the set of equations $E = \emptyset$  and $\Sigma$ will contain the sorts \texttt{Bus} and \texttt{Status} with their respective operators. To model the different events in the model, 4 rewriting rules were used:
 \begin{itemize}
     \item An unconditional rule, labeled \texttt{move}, that represents the event of using the gas pedal to move the bus by changing the status from \texttt{stationary} to \texttt{moving}. Note that this rule can only be applied when the bus is \texttt{stationary}, as stated by the rule first term \texttt{bus(N,stationary)}.
     \item An unconditional rule, labeled \texttt{stop}, that represents the event of using the brakes to stop the bus. This changes the status of the bus from \texttt{moving} to \texttt{stationary}. As the previous rule, it can only be applied when the first term is matched, i.e. when the bus status is \texttt{moving}. 
-    \item An unconditional rule, labeled \texttt{drop}, that represents the event of dropping people off the bus. The subterm \texttt{s(N)} assures that it can only drop a person when the number of people in one or more. This rule rewrites the state of the system, by reducing the number of passengers in the bus by one.
-    \item A conditional rule, labeled \texttt{lift}, that represents the event of lifting a passenger. When this rules are applied, the number of passengers inside the bus is increased by one. To prevent exceeding the maximum capacity of the bus, the condition \texttt{if s(N) <= 60} is used. 
+    \item An unconditional rule, labeled \texttt{drop}, that represents the event of dropping people off the bus. The subterm \texttt{s(N)} assures that it can only drop a person when the number of people inside the bus is one or more. This rule rewrites the state of the system, by reducing the number of passengers in the bus by one.
+    \item A conditional rule, labeled \texttt{lift}, that represents the event of lifting a passenger. When this rule is applied, the number of passengers inside the bus is increased by one. To prevent exceeding the maximum capacity of the bus, the condition \texttt{if s(N) <= 60} is used. 
 \end{itemize}
-With this system module, that represents a rewrite theory $\mathscr{R}$, the simple bus model can be specified and verified using other functionalities in Maude like model checking with the commands \texttt{rewrite} and \texttt{search}. The \texttt{rewrite} command or \texttt{rew} takes an initial state of the system and uses the rewriting rules until termination, i.e. until no other rewriting rule can be applied to the system state. In the case of the bus example, the rules \texttt{move} and \texttt{stop} can be applied infinitely. Therefore, to be able to simulate this system, Maude also allows to use bounded rewriting. With this method, it is possible to specify the number of rewriting rules to be applied to the initial state of the system. For example, the command \texttt{rew [3] bus(0, stationary) .} will apply 3 rewriting rules to the state \texttt{bus(0, stationary)}, which refers to a stationary bus with no passengers. The resulting execution is:
+With this system module, that represents a rewrite theory $\mathscr{R}$, the simple bus model can be specified and verified using other functionalities in Maude like model checking with the commands \texttt{rewrite} and \texttt{search}. The \texttt{rewrite} command or \texttt{rew} takes an initial state of the system and uses the rewriting rules until termination, i.e. until no other rewriting rule can be applied to the system state. In the case of the bus example, the rules \texttt{move} and \texttt{stop} can be applied infinitely. Therefore, to be able to simulate the system, Maude also allows to use bounded rewriting. With this method, it is possible to specify the number of rewriting rules to be applied to the initial state of the system. For example, the command \texttt{rew [3] bus(0, stationary) .} will apply 3 rewriting rules to the state \texttt{bus(0, stationary)}, which refers to a stationary bus with no passengers. The resulting execution is:
 \\
 \begin{maude2}
 *********** rule
@@ -355,7 +384,7 @@ The basic sorts are \texttt{Object}, \texttt{Msg} and \texttt{Configuration}. A 
 \begin{align*}
     \langle O : C \ | \ a_1:v_1,...a_n:v_n \rangle
 \end{align*}
-Where $O$ is the object's identifier, $C$ is its class, $a_1...a_n$ are attribute identifiers and $v_1...v_n$ are the values of each one of the attributes. This defined syntax in Maude is implemented as:
+Where $O$ is the object's identifier, $C$ is a class identifier, $a_1...a_n$ are attribute identifiers and $v_1...v_n$ are the values of each one of the attributes. This defined syntax in Maude is implemented as:
 \\
 \begin{maude}
   --- Maude object syntax
@@ -410,14 +439,14 @@ result Configuration: < A-001 : Account | bal : 550 >
 \section{PMaude}
 %acknowledge the PMaude paper
 %explain what PMaude is (probably use the thesis proposal)
-Probabilistic Maude or PMaude \cite{Agha2006}, is a Maude extension that introduces probabilities to the language. The underlying theory behind PMaude are  \textit{probabilistic rewrite theories} which correspond to an extension of rewrite theories: probabilistic rewrite theories can be expressed as tuple $\mathscr{R}_p = (\Sigma, E, L, R, \pi)$, where $(\Sigma, E, L, R,)$ is a rewrite theory and $\pi$ is a function that assigns to each rewrite rule $r \in R$ a probability, given the current model state or configuration. This probability will determine if a rule may or may not be executed in the following system transition. The general form of probabilistic rewrite rules, for unconditional and conditional respectively is:
+Probabilistic Maude or PMaude \cite{Agha2006}, is a Maude extension that introduces probabilities to the language. The underlying theory behind PMaude are  \textit{probabilistic rewrite theories} which correspond to an extension of rewrite theories: probabilistic rewrite theories can be expressed as tuple $\mathscr{R}_p = (\Sigma, E, L, R, \pi)$, where $(\Sigma, E, L, R,)$ is a rewrite theory and $\pi$ is a function that assigns to each rewrite rule $r \in R$ a probability, given the current model state or configuration. This probability will determine if a rule may or may not be executed in the following system transition. The general form of probabilistic rewrite rules, both unconditional and conditional respectively is:
 \begin{align*}
     l &: t(\overrightarrow{x}) \rightarrow t'(\overrightarrow{x}, \overrightarrow{y}) \; \text{if} \; C(\overrightarrow{x}) \; \textbf{with probability} \; \overrightarrow{y} := \pi_r(\overrightarrow{y}) \\
     l' &: t(\overrightarrow{x}) \rightarrow t'(\overrightarrow{x}, \overrightarrow{y}) \; \textbf{with probability} \; \overrightarrow{y} := \pi_r(\overrightarrow{y})  
 \end{align*}
 Where $\overrightarrow{x}$ is the set of variables of the current model state,  $\overrightarrow{y}$ is the set of new variables accessible in the following model state and $C(\overrightarrow{x})$ is the conjunction of conditions over the set $\overrightarrow{x}$. Moreover, $l, l'$ are labels in $L$, $t,t'$ are terms written with $\Sigma$ and $\pi_r$ corresponds to the probability function assigned to the specific rule $r \in R$. 
 %provide the clock example and explain it
-Let's consider the PMaude module, presented in \cite{Agha2006}: \\
+To exemplify this new notion, let's consider the PMaude module, presented in \cite{Agha2006}: \\
 \begin{maude}[mathescape=true]
 pmod EXPONENTIAL-CLOCK is
   --- import positive real number module
@@ -503,9 +532,7 @@ endm
 
 \section{VeStA, PVeStA, MultiVeStA, QuaTEx and MultiQuaTEx}
 %explain what is VeStA
-VeStA \cite{Vesta} is a tool (implemented in Java) for statistical analysis of probabilistic systems. It supports statistical model checking and statistical evaluation of expected values of temporal expressions. These expressions can be constructed using the query language of  \textit{Quantitative Temporal Expression} or QuaTEx \cite{Agha2006}, and analyzed by VeStA using \textit{Monte Carlo simulations} . 
-%explain how VeStA works
-The general process to use VeStA and analyze the properties of a probabilistic model, is the following:
+VeStA \cite{Vesta} is a tool (implemented in Java) for statistical analysis of probabilistic systems. It supports statistical model checking and statistical evaluation of expected values of temporal expressions. These expressions can be constructed using the query language of  \textit{Quantitative Temporal Expression} or QuaTEx \cite{Agha2006}, and analyzed by VeStA using \textit{Monte Carlo simulations}. The general process to use VeStA and analyze the properties of a probabilistic model, is the following:
 \begin{enumerate}
     \item Create a probabilistic system in the supported modeling languages, e.g. probabilistic rewrite theories specified in PMaude.
     \item Define the model properties that are going to be analyzed using the supported temporal expressions, e.g. QuaTEx.
@@ -513,7 +540,7 @@ The general process to use VeStA and analyze the properties of a probabilistic m
     \item Get the expected value of the temporal expressions specified in step 2.
 \end{enumerate}
 %explain how Quatex works
-The syntax of a QuaTEx expression is defined in figure \ref{fig:multivesta}. The reader can find an in depth explanation of this syntax and how QuaTEx queries evaluate in \cite{Agha2006,multivesta}, but for now we will define a QuaTEx expression as the expected value of a temporal logic predicate over state observations (i.e. the value of the variables of a model in a given configuration) that returns a real number (i.e. a \textit{real-typed predicate}). For example the QuaTEx expression \texttt{eval E[$PExp$]} returns the expected value of the real number returned by the temporal logic predicate $PExp$ (or also called \textit{path expression} in the syntax of QuaTEx).  
+The syntax of a QuaTEx expression is defined in figure \ref{fig:multivesta}. The reader can find an in depth explanation of this syntax and how QuaTEx queries evaluate in \cite{Agha2006,multivesta}, but for now we will define a QuaTEx expression as the expected value of a temporal logic predicate over state observations that returns a real number. For example the QuaTEx expression \texttt{eval E[$PExp$]} returns the expected value of the real number returned by the temporal logic predicate $PExp$ (or also called \textit{path expression} in the syntax of QuaTEx).  
 \begin{figure}[h]
     \centering
     \includegraphics[scale = 0.4]{images/quatex1.png}
@@ -521,7 +548,7 @@ The syntax of a QuaTEx expression is defined in figure \ref{fig:multivesta}. The
     \label{fig:multivesta}
 \end{figure}
 
-Using the previous definition of QuaTEx queries, let's suppose that we want to find the expected value of a QuaTEx query \texttt{eval E[$PExp$]} using VeStA (we will refer to the expected value of the QuaTEx query obtained by VeStA as $\bar{x}$, and to the real expected value as $x$). To obtain $\bar{x}$, VeStA uses 2 user-defined parameters $\alpha$ and $\delta$. With these parameters, VeStA runs $n$ simulations, until $n$ is large enough to obtain a \textit{confidence interval} (CI) with probability $(1-\alpha) * 100\%$ bounded by $\delta$, i.e an interval $[\bar{x} - \frac{\delta}{2},\bar{x} + \frac{\delta}{2}]$ where the probability that $x \in [\bar{x} - \frac{\delta}{2},\bar{x} + \frac{\delta}{2}]$ is $(1-\alpha) * 100\%$. In other words, if VeStA calculates the expected value of a QuaTEx query as $\bar{x}$, then the probability that the real expected value of the query (represented as $x$) is in the interval $[\bar{x} - \frac{\delta}{2},\bar{x} + \frac{\delta}{2}]$, is $(1-\alpha) * 100\%$ (An example will be presented in the next section to illustrate this)
+Using the previous definition of QuaTEx queries, let's suppose that we want to find the expected value of a QuaTEx query \texttt{eval E[$PExp$]} using VeStA (we will refer to the expected value of the QuaTEx query obtained by VeStA as $\bar{x}$, and to the real expected value as $x$). To obtain $\bar{x}$, VeStA uses 2 user-defined parameters $\alpha$ and $\delta$. With these parameters, VeStA runs $n$ simulations, until $n$ is large enough to obtain a \textit{confidence interval} (CI) with probability $(1-\alpha) * 100\%$ bounded by $\delta$, i.e an interval $[\bar{x} - \frac{\delta}{2},\bar{x} + \frac{\delta}{2}]$ where the probability that $x \in [\bar{x} - \frac{\delta}{2},\bar{x} + \frac{\delta}{2}]$ is $(1-\alpha) * 100\%$. In other words, if VeStA calculates the expected value of a QuaTEx query as $\bar{x}$, then the probability that the real expected value of the query (represented as $x$) is in the interval $[\bar{x} - \frac{\delta}{2},\bar{x} + \frac{\delta}{2}]$, is $(1-\alpha) * 100\%$.
 
 VeStA and Quatex have also seen many upgrades during time. For example, the authors in \cite{AlTurki2011} present an extension of VeStA called PVeStA. This tool allows to run parallelized algorithms for statistical model checking using a client-server architecture. Furthermore \cite{multivesta} presents an extension of both VeStA and PVeStA called MultiVeStA, that extends the QuaTEx language to MultiQuaTEx, by allowing to query more state measures at a time. This improves the usability and the performance of the language. The extension also integrates existing discrete event simulators in addition to the originally supported ones, and improves the presentation of results.
 
@@ -570,7 +597,7 @@ PTime() = if ( s.rval("isBrk") == 1.0 )
           then s.rval("eTime") else # PTime() fi ;
 eval E[ PTime() ] ;
 
-------------------------------------------------------------
+#------------------------------------------------------------
 
 PBattery() = if ( s.rval("isBrk") == 1.0 ) 
              then s.rval("eBattery") else # PBattery() fi ;
@@ -630,14 +657,15 @@ mod EBCONTEXT is
 endm
 \end{maude}
 
-Where \textit{EBTYPE} encodes the values of the model constants, by wrapping all the possible types a constant can have and \textit{EBSet} contains the definition of finite set. This Maude version of the context is based on the \textit{CONFIGURATION} theory, which specifies an object oriented programming method in Maude (the reader can refer to \cite{MaudeManual} chapter 8 for a in depth explanation). In general, an object $O$ of class $C$ is represented by a structure of the form $<O:C \; | \; a_1 : v_1 , ... , a_n:v_n>$ where $a_i$ are attributes identifiers and $v_i$ are terms that represent the current values of the attributes. Therefore, a context is represented as an object of the class \textit{Context}, with two attributes that are \textit{sets} and \textit{constants}. the attribute \textit{sets} contains all the sets identifiers paired with their respective values, and  \textit{constants} contains all the constant identifiers paired with their respective values. The context attributes' values are initialized using the \textit{init-context, init-sets} and \textit{init-constants} operators. In case of the Event-B machine, it is represented with the following Maude specification:
+Where \texttt{EBtype} encodes the values of the model constants, by wrapping all the possible types a constant can have and \texttt{EBSet} contains the definition of finite set. This Maude version of the context is based on the \texttt{CONFIGURATION} theory, previously explained in section 2.5. A context is represented as an object of the class \texttt{Context}, with two attributes that are \texttt{sets} and \texttt{constants}. The attribute \texttt{sets} contains all the sets identifiers paired with their respective values, and \texttt{constants} contains all the constant identifiers paired with their respective values. The context attributes' values are initialized using the \texttt{init-context, init-sets} and \texttt{init-constants} operators. In case of the Event-B machine, it is represented with the following Maude specification:
 \\
 \begin{maude}
 mod EBMACHINE is
   inc EBCONTEXT  . --- Context specification. 
   op Machine  : -> Cid . --- Class for machines
   op variables :_ : Map{Qid , EBType} -> Attribute . --- Machine's variables 
-  op init-variables : ->  Map{Qid , EBType} . --- Instantiated by the machine at hand
+  --- Instantiated by the machine at hand
+  op init-variables : ->  Map{Qid , EBType} . 
   op init-machine : Qid Qid -> Object . --- Initial state of the machine
   vars QM QC : Qid .
   --- Configuration defining the machine QM and its context QC
@@ -647,7 +675,7 @@ mod EBMACHINE is
                   < events : Events | state: init-events >.     --- Events 
 [...] --- event specification explained below
 \end{maude}
-Like the context, the machine is also represented using object-oriented programming in Maude. A machine is an object of the class \textit{Machine} with only one attribute \textit{variables}, that correspond to all the variable identifiers paired with their respective value. The previously explained definitions for the Maude version of context and machine, correspond to the rewrite theory $\mathscr{R}$, which can be extended in two steps, to obtain $\mathscr{R}_\mathscr{M}$: adding the initialization event, that will fill the initial configuration of the model with the initial values of all the variables, and the second step is to add the different equations and rewrite rules that encode the probabilistic Event-B events. The former is represented as an equation that initializes \textit{init-variables}, of the form:
+Like the context, the machine is also represented using object-oriented programming in Maude. A machine is an object of the class \texttt{Machine} with only one attribute \texttt{variables}, that correspond to all the variable identifiers paired with their respective value. The previously explained definitions for the Maude version of context and machine, correspond to the rewrite theory $\mathscr{R}$, which can be extended in two steps, to obtain $\mathscr{R}_\mathscr{M}$: adding the initialization event, that will fill the initial configuration of the model with the initial values of all the variables, and the second step is to add the different equations and rewrite rules that encode the probabilistic Event-B events. The former is represented as an equation that initializes \texttt{init-variables}, of the form:
 \\
 \begin{maude}
     eq init-variables = ('v1 |-> val1, ... , ('vn   |-> valn)
@@ -667,7 +695,7 @@ Where every $v_1 ... v_n$ are the model's variables and $val_1..val_n$ are their
  ops blocked unknown execute : -> EvState . 
  op enable : NzNat -> EvState . --- Enable with a given weight w > 0
 \end{maude}
-where \textit{blocked} means that the event can't be executed in the current machine configuration, \textit{unknown} means that the event's state hasn't been computed, \textit{execute} implies that the event will be executed in the following transition and \textit{enable} states that an event is enabled for execution in the given machine configuration, with an specific weight. The definition for an event is:
+where \texttt{blocked} means that the event can't be executed in the current machine configuration, \texttt{unknown} means that the event's state hasn't been computed, \texttt{execute} implies that the event will be executed in the following transition and \texttt{enable} states that an event is enabled for execution in the given machine configuration, with an specific weight. The definition for an event is:
 \\
 \begin{maude}
    sort Event LEvent . --- Events and list of events
@@ -675,23 +703,22 @@ where \textit{blocked} means that the event can't be executed in the current mac
    op state:_ : LEvent -> Attribute . --- Attribute for objects of class Events   
    op init-events : -> LEvent . --- To be instantiated by the machine at hand
 \end{maude}
-Each event has the form $ev(e_i, st_i)$, where $e_i$ is the event identifier and $st_i$ is the state of the event. When the machine is initialized, every event $e_i$ (represented as the event list \textit{init-events}) starts as $ev(e_i, unknown)$. In the following machine configurations, the events' states are updated deterministically with an equation from \textit{unknown} to \textit{enabled} or \textit{blocked}, depending on the guards of the event and the current state of the machine.
+Each event has the form $ev(e_i, st_i)$, where $e_i$ is the event identifier and $st_i$ is the state of the event. When the machine is initialized, every event $e_i$ (represented as the event list \texttt{init-events}) starts as $ev(e_i, unknown)$. In the following machine configurations, the events' states are updated deterministically with an equation from \texttt{unknown} to \texttt{enabled} or \texttt{blocked}, depending on the guards of the event and the current state of the machine.
 
 \textbf{Determine next event to execute (2)} In order to probabilistically select the next event that will be executed, using the event weights of the enabled events, the following conditional rule is used:
+\\
 \begin{maude}
 crl [next-event] :  < events : Events | state: LE > => 
-                    < events : Events | ev(pick(LEA, rand(max-value(LEA))), execute) >
-if     all-ready(LE)              --- All e in LE is in state either blocked or enabled 
-   /\  one-firable(LE)            --- At least one event is enabled 
-   /\  LE' := filter(LE)          --- Extract the enabled events
-   /\  LEA := accumulate(LE') .   --- Accumulate the weights 
+                    < events : Events | ev(pick(LEA,
+                      rand(max-value(LEA))), execute) >
+if     all-ready(LE) --- All e in LE is in state either blocked or enabled 
+   /\  one-firable(LE) --- At least one event is enabled 
+   /\  LE' := filter(LE) --- Extract the enabled events
+   /\  LEA := accumulate(LE') . --- Accumulate the weights 
 \end{maude}
-this rule states that if there exists one or more enabled events (no deadlock), then one of the enabled events is picked, following a uniform distribution on the interval $[0, W)$ where $W$ is the sum of all the weights of enabled events. The state of the selected event will the be changed to \textit{execute}.
+this rule states that if there exists one or more enabled events (no deadlock), then one of the enabled events is picked, following a uniform distribution on the interval $[0, W)$ where $W$ is the sum of all the weights of enabled events. The state of the selected event will the be changed to \texttt{execute}.
 
 \textbf{Actions in events (3)} After an event is chosen for execution, the variable values need to change according to the event actions. Both deterministic an probabilistic assignments can be done  by simply changing the state configuration using a standard rewrite rule, with the slight difference that for probabilistic assignments or assignments that involve a parameter, a function that simulates a uniform distribution (like the one used for selecting events) will be used to select the new variable value or the value of the parameter in the assignment.
-
-\section{Rodin and Plugin Development}
-
 
 
 
