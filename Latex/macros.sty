@@ -1,0 +1,117 @@
+%packages--------------------------------- 
+\usepackage{url}
+\usepackage{courier}
+\usepackage{listings}
+\usepackage{esvect}
+\usepackage[parfill]{parskip} %avoid paragraph identation
+\usepackage{float} %to force table to stay in place
+\usepackage{xcolor}
+\usepackage{a4wide} %increase the width of the page
+
+%math related
+\usepackage{mathrsfs} %for the R in rewrite theory
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{stmaryrd}
+\usepackage{amsfonts}
+\usepackage{calrsfs}
+%to draw the dependency graph -------------------------
+\usepackage{tikz} 
+\usetikzlibrary{positioning}
+%------------------------------------------------------
+
+
+
+\usepackage{comment}
+\usepackage{graphicx}
+\graphicspath{ {images/} }
+\usepackage{subfig}
+
+%--------------------------------------------
+%custom bullets
+%--------------------------------------------
+\newcommand\itema{\item[\textbf{R1.}]}
+\newcommand\itemb{\item[\textbf{R2.}]}
+\newcommand\itemc{\item[\textbf{R3.}]}
+\newcommand\itemd{\item[\textbf{R4.}]}
+\newcommand\iteme{\item[\textbf{R5.}]}
+%--------------------------------------------
+
+%--------------------------------------------
+%equal with a hat
+%--------------------------------------------
+\usepackage{scalerel,stackengine}
+\newcommand\equalhat{\mathrel{\stackon[1.5pt]{=}{\stretchto{%
+    \scalerel*[\widthof{=}]{\wedge}{\rule{1ex}{3ex}}}{0.5ex}}}}
+%-----------------------------------------
+
+%maude environment------------------------
+\definecolor{darkred}{rgb}{0.6,0,0}
+\definecolor{coloract}{rgb}{0.50,0.70,0.30}
+\definecolor{colorclock}{rgb}{0.4,0.4,1}
+\definecolor{colorloc}{rgb}{0.4,0.4,0.65}
+\definecolor{colorparam}{rgb}{1,0.6,0.0}
+
+\lstdefinelanguage{Maude}{%
+    keywords={
+        , mod, fmod, endm, endfm
+        , view, endv
+        , is
+        , pr , protecting
+        , ex , extending
+        , inc, including
+        , sort, sorts, subsort, subsorts
+        , var, vars
+        , op, ops
+        , eq, ceq
+        , rl, crl
+        , if
+        , search
+        , smt-search
+        , srew
+        , red, reduce
+        , fth, endfth
+        , then, else, fi
+    }
+    , alsoletter={-}
+    , keywordstyle=\color{blue}
+    , basicstyle=\ttfamily\small
+    , comment=[l]{---}
+    , commentstyle=\color{darkred}\ttfamily,
+    , columns=flexible
+    , numbers=none
+    , showstringspaces=false
+    , keepspaces=true
+    , aboveskip=-3pt
+    , mathescape=true
+}
+
+\lstnewenvironment{maude}{\lstset{language=Maude}}{}
+%------------------------------------------
+
+%maude output------------------------
+\lstdefinelanguage{Maude2}{%
+      basicstyle=\ttfamily\small
+    , columns=flexible
+    , numbers=none
+    , showstringspaces=false
+    , keepspaces=true
+    , aboveskip=-3pt
+    , mathescape=true
+}
+
+\lstnewenvironment{maude2}{\lstset{language=Maude2}}{}
+%------------------------------------------
+
+%Example & Definition environment----------
+\newtheorem{example}{Example}[section]
+\newtheorem{definition}{Definition}[section]
+%------------------------------------------
+
+
+
+%commands---------------------------------
+%\newcommand{\maude}[1]{}
+
+%-----------------------------------------

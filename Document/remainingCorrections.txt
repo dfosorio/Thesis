@@ -1,7 +1,0 @@
-Cambios a realizar al marco teorico: 
-1) cambiar ctx y abstract por ctxBrakeSystem y abstractBrakeSystem en las imagenes
-2) You have not explained yet the use of axioms (assoc, comm, id)... this must be done in the previous section (2.4) (quite important in Maude specifications!)
-3) Better to give an intuition abaut the definitions in this table (Figure 2.7)
-4) How? what can be improved in an expected value? (Section 2.7 when introducing MultiVesta)
-5) Instead of having the exponential function to determine the time increment,
-it will be fixed to 1. (WHY?) (Section 2.7)

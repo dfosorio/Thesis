@@ -1,2 +1,0 @@
-PTime() = if ( s.rval("isBrk") == 1.0 ) then s.rval("eTime") else # PTime() fi ;
-eval E[ PTime() ] ;
