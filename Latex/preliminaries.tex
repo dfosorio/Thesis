@@ -577,11 +577,15 @@ The syntax of a QuaTEx expression is defined in Figure \ref{fig:multivesta}. The
 
 Using the previous definition of QuaTEx queries, let's suppose that we want to find the expected value of a QuaTEx query \texttt{eval E[$PExp$]} using VeStA (we will refer to the expected value of the QuaTEx query obtained by VeStA as $\bar{x}$, and to the real expected value as $x$). To obtain $\bar{x}$, VeStA uses 2 user-defined parameters $\alpha$ and $\delta$. With these parameters, VeStA runs $n$ simulations, until $n$ is large enough to obtain a \textit{confidence interval} (CI) with probability $(1-\alpha) * 100\%$ bounded by $\delta$, i.e an interval $[\bar{x} - \frac{\delta}{2},\bar{x} + \frac{\delta}{2}]$ where the probability that $x \in [\bar{x} - \frac{\delta}{2},\bar{x} + \frac{\delta}{2}]$ is $(1-\alpha) * 100\%$. In other words, if VeStA calculates the expected value of a QuaTEx query as $\bar{x}$, then the probability that the real expected value of the query (represented as $x$) is in the interval $[\bar{x} - \frac{\delta}{2},\bar{x} + \frac{\delta}{2}]$, is $(1-\alpha) * 100\%$.
 
-VeStA and Quatex have also seen many upgrades during time. For example, the authors in \cite{AlTurki2011} present an extension of VeStA called PVeStA. This tool allows to run parallelized algorithms for statistical model checking using a client-server architecture. Furthermore \cite{multivesta} presents an extension of both VeStA and PVeStA called MultiVeStA, that extends the QuaTEx language to MultiQuaTEx, by allowing to query more state measures at a time. This improves the usability and the performance of the language. The extension also integrates existing discrete event simulators in addition to the originally supported ones, and improves the presentation of results.
+VeStA and Quatex have also seen many upgrades during time. For example, the authors in \cite{AlTurki2011} present an extension of VeStA called PVeStA. This tool allows to run parallelized algorithms for statistical model checking using a client-server architecture. Furthermore \cite{multivesta} presents an extension of both VeStA and PVeStA called MultiVeStA, that extends the QuaTEx language to MultiQuaTEx, by allowing to query more state measures at a time. This improves the usability and the performance of the language. The extension also integrates existing discrete event simulators in addition to the originally supported ones, and improves the presentation of results. In Chapter 5, a detailed explanation on how to use MultiVeStA with PMaude specifications, will be given.
+ 
 
-To illustrate how statistical analysis of probabilistic rewrite theories specified in Pmaude works, the MultiVeStA tool will be used to run simulations over the clock model specified in the previous section and verify properties over it. To do this, the steps to modify and run the clock example are:
+To illustrate how statistical analysis of probabilistic rewrite theories specified in Pmaude works, the MultiVeStA tool will be used to run simulations over the clock model 
+
+specified in the previous section and verify properties over it. To do this, the steps to modify and run the clock example are:
 \begin{enumerate}
     \item Define the PMaude model's states as configurations using object-oriented programming in Maude and define the system transitions as rewriting rules between configurations.
+    \item Implement a scheduler that chooses deterministically the event that is going to be executed.
     \item Include the necessary elements of MultiVeStA inside the model's definition.
     \item Define an analysis module to define the model observations used by the MultiQuaTEx queries.
     \item Define the MultiQuaTEx queries that represent the model's properties that want to be checked.
@@ -750,8 +754,8 @@ if     all-ready(LE) --- All e in LE is in state either blocked or enabled
 this rule states that if there exists one or more enabled events (no deadlock), then one of the enabled events is picked, following a uniform distribution on the interval $[0, W)$ where $W$ is the sum of all the weights of enabled events. The state of the selected event will the be changed to \texttt{execute}.
 
 \textbf{Actions in events (3)} After an event is chosen for execution, the variable values need to change according to the event actions. Both deterministic an probabilistic assignments can be done  by simply changing the state configuration using a standard rewrite rule, with the slight difference that for probabilistic assignments or assignments that involve a parameter, a function that simulates a uniform distribution (like the one used for selecting events) will be used to select the new variable value or the value of the parameter in the assignment.
-
 \end{comment}
+
 
 
 

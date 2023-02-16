@@ -1,5 +1,5 @@
 \chapter{A Rewriting Logic Semantics for Probabilistic Event-B}
-The rewriting logic approach to probabilistic Event-B \cite{Olarte}, introduces a method for translating probabilistic Event-B models to PMaude models that are executable in PVeStA. Formally speaking, it is a map $\llbracket \cdot \rrbracket: (\mathscr{C}, \mathscr{M}) \rightarrow \mathscr{R}_\mathscr{M}$ from a probabilistic event model to a probabilistic rewrite theory. There are two main steps for this transformation:
+The rewriting logic approach to probabilistic Event-B \cite{Olarte}, introduces a method for translating probabilistic Event-B models to PMaude models that are executable in PVeStA. Formally speaking, it is a map $\llbracket \cdot \rrbracket: (\mathscr{C}, \mathscr{M}) \rightarrow \mathscr{R}_\mathscr{M}$ from a probabilistic event model to a rewrite theory. There are two main steps for this transformation:
 
 \begin{enumerate}
     \item Specify a rewrite theory $\mathscr{R}$ to encode the static parts of the model, i.e. the context and the initialization of the machine.
@@ -24,7 +24,7 @@ The figure shows that the \texttt{EBMACHINE} module includes the \texttt{EBCONTE
     \caption{Interaction between $\mathscr{R}$ and the translated model}
     \label{fig:E2M2}
 \end{figure}
-Using this framework for representing Event-B models in Maude, it is possible to define the complete encoding $\llbracket \cdot \rrbracket$. To guide the reader through the complete encoding, we will use as an example the probabilistic brake system in section 2.3, Figure \ref{fig:brake3}. For the following sections, we will define a \textit{map} as a set of pairs of the form $(x_1 \mapsto y_1, x_2 \mapsto y_2, ... , x_n \mapsto y_n)$
+Using this framework for representing Event-B models in Maude, it is possible to define the complete encoding $\llbracket \cdot \rrbracket$. To guide the reader through the complete encoding, the example of the probabilistic brake system in section 2.3, Figure \ref{fig:brake3}, will be used. For the following sections, a \textit{map} will be defined as a set of pairs of the form $(x_1 \mapsto y_1, x_2 \mapsto y_2, ... , x_n \mapsto y_n)$
 
 \section{Step 1: Encoding Contexts}
 Let $\mathscr{C}$ be a context. The corresponding encoding of $\mathscr{C}$ in $\mathscr{R}$ corresponds to the term:
@@ -73,7 +73,7 @@ In order to simulate the behavior of probabilistic Event-B in Maude, it is neces
     \item \textbf{\textit{blocked}:} the event's guard is false.
     \item \textbf{\textit{execute}:} the event has been chosen for execution in the next system transition.
 \end{itemize}
-This structure maps each one of the events of the model to their corresponding event state in a given system configuration. Therefore, it allows to check after each system transition the states of the events. In the meantime, we will focus on how this structure is initialized, but the use for this structure will be detailed in the following sections.
+This structure maps each one of the events of the model to their corresponding event state in a given system configuration. Therefore, it allows to check after each system transition the states of the events. In the meantime, this section focuses on how this structure is initialized, but the use for this structure will be detailed in the following sections.
 
 Let $\mathscr{M}$ be a probabilistic machine. The corresponding encoding of the initialization of the events' states in $\mathscr{R}$ is the term:
     \begin{align*}
@@ -100,7 +100,7 @@ This term has sort \texttt{CONFIGURATION}, and combines the previously explained
     \begin{align*}
         \mathfrak{C} \ \mathfrak{M}_{0}  \ \mathfrak{E}
     \end{align*}
-Where $\mathfrak{C}$ is the term that represents the context, $\mathfrak{M}_{0}$ is the term that represents the machine in the initial state, and $\mathfrak{E}$ is the term that represents the events' states in the current system configuration. The rest of the system states, are symbolized with $\mathfrak{C} \ \mathfrak{M}_{i}  \ \mathfrak{E}$, and are obtained with the application of equations and rewrite rules, defined in $\mathscr{R}_\mathscr{M}$,  over the initial state $\mathfrak{C} \ \mathfrak{M}_{0}  \ \mathfrak{E}$. With these elements, we conclude the definition of the rewrite theory $\mathscr{R}$, and move on the the definition of the equations and rewrite rules that define $\mathscr{R}_\mathscr{M}$.
+Where $\mathfrak{C}$ is the term that represents the context, $\mathfrak{M}_{0}$ is the term that represents the machine in the initial state, and $\mathfrak{E}$ is the term that represents the events' states in the current system configuration. The rest of the system states, are symbolized with $\mathfrak{C} \ \mathfrak{M}_{i}  \ \mathfrak{E}$, and are obtained with the application of equations and rewrite rules, defined in $\mathscr{R}_\mathscr{M}$,  over the initial state $\mathfrak{C} \ \mathfrak{M}_{0}  \ \mathfrak{E}$. With these elements, the definition of the rewrite theory $\mathscr{R}$ is concluded. The following sections provide the definition of the equations and rewrite rules that define $\mathscr{R}_\mathscr{M}$.
 
 \section{Step 2: $evalSt$ Equation}
 The $evalSt$ equation, determines if an event is enabled or blocked, given the current state of the machine $\mathfrak{M}_i$ and the encoding of the guards of the event $e_i$, represented as $\llbracket \mathscr{M} \rrbracket^{e_i}_{guards}$ :
@@ -108,7 +108,7 @@ The $evalSt$ equation, determines if an event is enabled or blocked, given the c
     &\mathfrak{C} \ \mathfrak{M}_{i} \ \langle events : Events \ | \ state: ev(e_1,unknown) ... ev(e_n, unknown) \rangle = \\
     &\mathfrak{C} \ \mathfrak{M}_{i} \ \langle events : Events \ | \ state: ev(e_1, eval(\mathfrak{M}_i, \llbracket \mathscr{M} \rrbracket^{e_1}_{guards})) ... ev(e_n, eval(\mathfrak{M}, \llbracket \mathscr{M} \rrbracket^{e_n}_{guards})) \rangle
 \end{align*}
-To do this, for each one of the event states $ev(evt_1,st_1), ..., ev(evt_n,st_n)$, the equation evaluates the new state of the event $e_i$ with the equation $eval$. The equation takes as input the current state of the machine $\mathfrak{M}_i$, i.e. the value of each one of the variables, and then determines if the guards of event $e_i$ are satisfied, using the encoded version of the guards  $\llbracket \mathscr{M} \rrbracket^{e_n}_{guards}$. The returned value by $eval$, can only be \texttt{enabled(n)}, if the guards of the event are satisfied in $\mathfrak{M}_i$, or \texttt{blocked} otherwise. For example, if $evalSt$ is applied to the first state $\mathfrak{C} \ \mathfrak{M}_{0}  \ \mathfrak{E}$ we get :
+To do this, for each one of the event states $ev(evt_1,st_1), ..., ev(evt_n,st_n)$, the equation evaluates the new state of the event $e_i$ with the equation $eval$. The equation takes as input the current state of the machine $\mathfrak{M}_i$, i.e. the value of each one of the variables, and then determines if the guards of event $e_i$ are satisfied, using the encoded version of the guards  $\llbracket \mathscr{M} \rrbracket^{e_n}_{guards}$. The returned value by $eval$, can only be \texttt{enabled(n)}, if the guards of the event are satisfied in $\mathfrak{M}_i$, or \texttt{blocked} otherwise. For example, if $evalSt$ is applied to the first state $\mathfrak{C} \ \mathfrak{M}_{0}  \ \mathfrak{E}$, the obtained term is:
 \begin{maude}
 
 $\mathfrak{C}$ $\mathfrak{M}_0$ < events : Events | state: (ev('PushPedal, enable(10)) 
@@ -146,10 +146,68 @@ The resulting term with the highest probability is:
 
 $\mathfrak{C} \ \mathfrak{M}_i$ <events : Events | state : ev('ReleasePedal, execute)>
 \end{maude}
+Since the \textit{ReleasePedal} event has the biggest weight.
 
 \section{Step 2: $execEvt_{e_i}$ Rule}
 For each one of the events $e_i$ in the original probabilistic Event-B model, a rule $execEvt_{e_i}$ is encoded. It is defined as: 
 \begin{align*}
     \mathfrak{C} \ \mathfrak{M}_i \ \langle state: ev(e_i, execute) \rangle \rightarrow \mathfrak{C} \ \mathfrak{M}_j \ \langle state: \llbracket \mathscr{M} \rrbracket_{initEvtSt} \rangle
 \end{align*}
-where $\mathfrak{M}_j$ is obtained by changing the variable values according to the encoded probabilistic assignments of the specific event $e_i$.
+where $\mathfrak{M}_j$ is obtained by changing the variable values according to the encoded probabilistic assignments of the specific event $e_i$. Furthermore, after making the system transition from $\mathfrak{M}_i \rightarrow \mathfrak{M}_j$, the states of the events are reseted to \texttt{unknown}, as done in the initialization of the model.
+For example, if the current state is:
+\begin{maude}
+
+$\mathfrak{C}$ <'BrakeSystem: Machine | variables: ('brake |-> val(elt("released")), 
+                                        'pedal |-> val(elt("up")), 
+                                        'wear |-> val(elt(0))) >
+  <events : Events | state: ev('PushPedal, execute) >
+\end{maude}
+After executing rule $execEvt_{PushPedal}$ the resulting state with highest probability is:
+\begin{maude}
+
+$\mathfrak{C}$ <'BrakeSystem: Machine | variables: ('brake |-> val(elt("released")), 
+                                        'pedal |-> val(elt("down")), 
+                                        'wear |-> val(elt(0))) >
+  < events : Events | state: (ev('PushPedal, unknown) 
+                              ev('ReleasePedal, unknown) 
+                              ev('ApplyBrake, unknown) 
+                              ev('ApplyBrakeFailure, unknown) 
+                              ev('ReleaseBrake, unknown)) >
+\end{maude}
+Since the \textit{down} value for the \textit{pedal} variable, has a $90\%$ chance of being selected, in the probabilistic assignment from the original model.
+
+\section{$\mathscr{R}_\mathscr{M}$ in a Nutshell}
+Using all the previously explained elements of the rewrite theory $\mathscr{R}_\mathscr{M}$, it is possible to summarize how the encoding produces a rewrite theory, that has the same behavior of a probabilistic Event-B model: 
+
+
+\begin{enumerate}
+    \item The probabilistic Event-B is encoded to the rewrite theory $\mathscr{R}_\mathscr{M}$, using $\llbracket \cdot \rrbracket$:
+    \begin{align*}
+        \llbracket \cdot \rrbracket: (\mathscr{C}, \mathscr{M}) \rightarrow \mathscr{R}_\mathscr{M}
+    \end{align*}
+    \item The system is initialized with term $\mathfrak{C \ M_0 \ E}$ inside $\mathscr{R}_\mathscr{M}$:
+    \begin{align*}
+        \mathfrak{C \ M_0 \ E}
+    \end{align*}
+    \item For any state of the model, symbolized by $\mathfrak{M_i}$, the event guards are evaluated using the equation $evalSt$.
+    \begin{align*}
+        \mathfrak{C \ M_i} \ \langle state: ev(e_1,unknown) ... ev(e_n, unknown) \rangle \xrightarrow{evalSt} \mathfrak{C \ M_i} \ \langle state: ev(e_1,st_1) ... ev(e_n, st_n) \rangle
+    \end{align*}
+    \item The blocked events are filtered and the next event is chosen probabilistically from all the enabled events, based on the event's weights:
+    \begin{align*}
+        \mathfrak{C \ M_i} \ \langle state: ev(e_1,st_1) ... ev(e_n, st_n) \rangle \xrightarrow{chooseEvt} \mathfrak{C \ M_i} \ \langle state: ev(e_i,execute) \rangle
+    \end{align*}
+    \item The rule associated to the encoded version of the chosen event $e_i$ in the previous step is executed. The resulting change of the variable values, is captured in the rewrite $\mathfrak{M_i} \rightarrow \mathfrak{M_j}$. Moreover, the states of the events are initialized again. 
+    \begin{align*}
+        \mathfrak{C \ M_i} \ \langle state: ev(e_i,execute) \rangle \xrightarrow{execEvt_{e_i}} \mathfrak{C \ M_j} \ \langle state: ev(e_1,unknown) ... ev(e_n, unknown) \rangle
+    \end{align*}
+    \item Repeat steps 3,4 and 5 until deadlock (i.e. none of the events can be executed since the guards of the events are unsatisfiable), or a fixed number of rewrites has been done (i.e. the number of possible system transitions a simulation can have is bounded by this parameter).
+\end{enumerate}
+Based on the presented encoding, it is possible to prove that the resulting rewrite theory $\mathscr{R}_\mathscr{M}$ is semantically correct, based on the probabilistic Event-B model $(\mathscr{C}, \mathscr{M})$:
+
+\begin{theorem}[adequacy]
+Let $(\mathscr{C}, \mathscr{M})$ be an Event-B model and
+$\mathcal{R}_{\mathcal{M}}$ be a rewrite theory obtained by the encoding $\llbracket \cdot \rrbracket: (\mathscr{C}, \mathscr{M}) \rightarrow \mathscr{R}_\mathscr{M}$. Furthermore, let $s$ and $s'$ be states or configurations of $\mathscr{M}$ (i.e. valuations of the variables in $\mathscr{M}$), and $s \xRightarrow{e_i,p} s'$ be a system transition from state $s$ to $s'$, using the event $e_i$ with probability $p$. Then $s \xRightarrow{e_i,p} s'$ iff $\llbracket \mathscr{M} \rrbracket_s \rightarrow_p \llbracket \mathscr{M} \rrbracket_{s'}$, where $\llbracket \mathscr{M} \rrbracket_s$ and $\llbracket \mathscr{M} \rrbracket_{s'}$ correspond to the encoded version of states $s$ and $s'$ respectively, and $\rightarrow_p$ denotes one-step rewriting in $\mathscr{R}_\mathscr{M}$ with probability $p$.
+\end{theorem}
+
+\textbf{\textit{Proof.}} The reader can refer to \cite{Olarte} for the proof sketch of this theorem $\square$.
