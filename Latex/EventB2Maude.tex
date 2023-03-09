@@ -201,7 +201,7 @@ Using all the previously explained elements of the rewrite theory $\mathscr{R}_\
     \begin{align*}
         \mathfrak{C \ M_i} \ \langle state: ev(e_i,execute) \rangle \xrightarrow{execEvt_{e_i}} \mathfrak{C \ M_j} \ \langle state: ev(e_1,unknown) ... ev(e_n, unknown) \rangle
     \end{align*}
-    \item Repeat steps 3,4 and 5 until deadlock (i.e. none of the events can be executed since the guards of the events are unsatisfiable), or a fixed number of rewrites has been done (i.e. the number of possible system transitions a simulation can have is bounded by this parameter).
+    \item Repeat steps 3,4 and 5 until deadlock (i.e. none of the events can be executed since the guards of the events are unsatisfiable), or until the rule $execEvt_{e_i}$ has been executed a fixed number of times (this value is represented as a constant named \texttt{MAX-STEPS} inside $\mathscr{R}_\mathscr{M}$).
 \end{enumerate}
 Based on the presented encoding, it is possible to prove that the resulting rewrite theory $\mathscr{R}_\mathscr{M}$ is semantically correct, based on the probabilistic Event-B model $(\mathscr{C}, \mathscr{M})$:
 
