@@ -232,9 +232,9 @@ insert({0.0 | nilSL },[ 0.0 + 1.0 , Mi]) $\rightarrow$ {0.0 | [1.0 , Mi] }
 
 \item MultiVeStA reads the Maude console and saves the current configuration. The saved configuration will be defined as \texttt{Conf}.
 
-\item MultiVeStA sends the command \texttt{rew tick(conf)}.
+\item MultiVeStA sends the command \texttt{rew tick(Conf)}.
     \begin{enumerate}
-        \item Maude reduces the term \texttt{rew tick(conf)}:
+        \item Maude reduces the term \texttt{rew tick(Conf)}:
         \begin{maude}
 
 tick({gt | [gt' , Mi]}     $\rightarrow$  Mi {gt' | nilSL }
@@ -259,10 +259,19 @@ insert({gt' | nilSL},[gt' + 1.0 , Mj]) $\rightarrow$ {gt' | [gt' + 1.0 , Mj]}
 {C' randomCounter(n+1)}                   {C' randomCounter(n+1)}\end{maude}
     \end{enumerate}
 
-    \item MultiVeStA reads the Maude console and saves the current configuration. The saved configuration will be defined as \texttt{Conf'}.
+    \item MultiVeStA reads the Maude console and saves the current configuration. The saved configuration will be defined as \texttt{Conf}.
 
-    \item MultiVeStA evaluates the query in query.multiquatex, using the user defined equations for the \texttt{val} operators, to calculate the \texttt{s.rval()} state observations.
-    \item If the query is satisfied, then get the float number returned by the query. If not, then repeat step 4 over the previous configuration \texttt{Conf'}, and then steps 5 through 7, until the formula is satisfied.
+    \item MultiVeStA evaluates the query in query.multiquatex, using the user defined equations for the \texttt{val} operators, to calculate the \texttt{s.rval()} state observations. To do this, for every \texttt{s.rval("obs")} in the query MultiVeStA sends to Maude the command \texttt{red val("obs", Conf)}, and obtains the float number returned by the equation. Using these results of the \texttt{val} equations, then MultiVeStA is able to evaluate the query.
+    
+    \item If the query is satisfied, then get the float number returned by the query. If not, then repeat step 4 over the previous configuration \texttt{Conf}, and then steps 5 through 7, until the formula is satisfied.
 \end{enumerate}
 The complete process can be visualized in a sequence diagram, that extends the previous one presented in figure \ref{fig:multi4}:
 
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale = 0.6]{images/multi5.png}
+    \caption{Extension of sequence diagram in Figure \ref{fig:multi4}}
+    \label{fig:multi5}
+\end{figure}
+
+Based on this introduction to MultiVeStA and chapter 3, the next chapter will present the integration between the rewriting logic approach to probabilistic Event-B and MultiVeStA.
