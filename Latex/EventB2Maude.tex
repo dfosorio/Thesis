@@ -26,7 +26,7 @@ The figure shows that the \texttt{EBMACHINE} module includes the \texttt{EBCONTE
 \end{figure}
 Using this framework for representing Event-B models in Maude, it is possible to define the complete encoding $\llbracket \cdot \rrbracket$. To guide the reader through the complete encoding, the example of the probabilistic brake system in section 2.3, Figure \ref{fig:brake3}, will be used. For the following sections, a \textit{map} will be defined as a set of pairs of the form $(x_1 \mapsto y_1, x_2 \mapsto y_2, ... , x_n \mapsto y_n)$
 
-\section{Step 1: Encoding Contexts}
+\section{Encoding Contexts}
 Let $\mathscr{C}$ be a context. The corresponding encoding of $\mathscr{C}$ in $\mathscr{R}$ corresponds to the term:
     \begin{align*}
     \langle \ \llbracket \mathscr{C} \rrbracket_{id} : Context \ | \ sets: \llbracket \mathscr{C} \rrbracket_{sets} , \ constants: \llbracket \mathscr{C} \rrbracket_{constants} \ \rangle
@@ -46,7 +46,7 @@ Where $\llbracket \mathscr{C} \rrbracket_{id}$ encodes the context's identifier,
     \item $\llbracket \mathscr{C} \rrbracket_{sets}$ returns a map of quoted identifiers, that represent the deferred sets' names, with a set of sort \texttt{EBSet}, that represent the possible values of the deferred set. The sort \texttt{EBSet} is defined as a Maude set, where the elements of the set are of sort \texttt{EBElt}. For example, in the brake model the deferred set that contains the possible states for the \textit{pedal} variable, is represented by the pair \texttt{'SPEDAL |-> (elt("down"), elt("up")))}.
 \end{itemize}
 
-\section{Step 1: Machine Initialization in Maude}
+\section{Machine Initialization in Maude}
 Let $\mathscr{M}$ be a probabilistic machine. The corresponding encoding of the initialization of $\mathscr{M}$ in $\mathscr{R}$ is the term:
     \begin{align*}
     & \langle \ \llbracket \mathscr{M} \rrbracket_{id} : Machine \ | \ variables: \llbracket \mathscr{M} \rrbracket_{initVars} \ \rangle 
@@ -65,7 +65,7 @@ Where $\llbracket \mathscr{M} \rrbracket_{id}$ encodes the machine's identifier 
     \item $\llbracket \mathscr{M} \rrbracket_{initVars}$ returns a map of quoted identifiers, that represent the names of the variables, with a term of sort \texttt{EBType}, that represent the values of the variables. For example, in the brake model the variable \textit{pedal} and its value in the initial state, are represented by the pair \texttt{'pedal |-> val(elt("up"))}.
 \end{itemize}
 
-\section{Step 1: Events' States in Maude}
+\section{Events' States in Maude}
 In order to simulate the behavior of probabilistic Event-B in Maude, it is necessary to have a deterministic method to choose the next event that is going to be executed during simulation. To do this, it is necessary to define a structure that contains the states of the events in each system configuration. These possible event's states are:
 \begin{itemize}
     \item \textbf{\textit{unknown}:} the event's guards have not been evaluated.
@@ -89,7 +89,7 @@ Where $\llbracket \mathscr{M} \rrbracket_{initEvtSt}$ encodes the initialization
                             ev('ReleaseBrake, unknown)) >
 \end{maude}
 
-\section{Step 1: Initial State and System States in Maude}
+\section{Initial State and System States in Maude}
 As seen in the preliminaries chapter, the states of the specification of a system in Maude, are represented using terms. For the translated models from probabilistic Event-B models, the initial system state of the system is:
 \begin{align*}
         &\langle \ \llbracket \mathscr{C} \rrbracket_{id} : Context \ | \ sets: \llbracket \mathscr{C} \rrbracket_{sets} , \ constants: \llbracket \mathscr{C} \rrbracket_{constants} \ \rangle \\
@@ -102,7 +102,7 @@ This term has sort \texttt{CONFIGURATION}, and combines the previously explained
     \end{align*}
 Where $\mathfrak{C}$ is the term that represents the context, $\mathfrak{M}_{0}$ is the term that represents the machine in the initial state, and $\mathfrak{E}$ is the term that represents the events' states in the current system configuration. The rest of the system states, are symbolized with $\mathfrak{C} \ \mathfrak{M}_{i}  \ \mathfrak{E}$, and are obtained with the application of equations and rewrite rules, defined in $\mathscr{R}_\mathscr{M}$,  over the initial state $\mathfrak{C} \ \mathfrak{M}_{0}  \ \mathfrak{E}$. With these elements, the definition of the rewrite theory $\mathscr{R}$ is concluded. The following sections provide the definition of the equations and rewrite rules that define $\mathscr{R}_\mathscr{M}$.
 
-\section{Step 2: $evalSt$ Equation}
+\section{$evalSt$ Equation}
 The $evalSt$ equation, determines if an event is enabled or blocked, given the current state of the machine $\mathfrak{M}_i$ and the encoding of the guards of the event $e_i$, represented as $\llbracket \mathscr{M} \rrbracket^{e_i}_{guards}$ :
 \begin{align*}
     &\mathfrak{C} \ \mathfrak{M}_{i} \ \langle events : Events \ | \ state: ev(e_1,unknown) ... ev(e_n, unknown) \rangle = \\
@@ -120,7 +120,7 @@ $\mathfrak{C}$ $\mathfrak{M}_0$ < events : Events | state: (ev('PushPedal, enabl
 
 
 
-\section{Step 2: $chooseEvt$ Rule}
+\section{$chooseEvt$ Rule}
 The $chooseEvt$ rule chooses probabilistically, the next event to be executed according to the weights of the enabled events:
 \begin{align*}
     \mathfrak{C} \ \mathfrak{M}_i \ \langle state: ev(e_1,st_1) ... ev(e_n, st_n) \rangle \rightarrow 
@@ -148,7 +148,7 @@ $\mathfrak{C} \ \mathfrak{M}_i$ <events : Events | state : ev('ReleasePedal, exe
 \end{maude}
 Since the \textit{ReleasePedal} event has the biggest weight.
 
-\section{Step 2: $execEvt_{e_i}$ Rule}
+\section{$execEvt_{e_i}$ Rule}
 For each one of the events $e_i$ in the original probabilistic Event-B model, a rule $execEvt_{e_i}$ is encoded. It is defined as: 
 \begin{align*}
     \mathfrak{C} \ \mathfrak{M}_i \ \langle state: ev(e_i, execute) \rangle \rightarrow \mathfrak{C} \ \mathfrak{M}_j \ \langle state: \llbracket \mathscr{M} \rrbracket_{initEvtSt} \rangle

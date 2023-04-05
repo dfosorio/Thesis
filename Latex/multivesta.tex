@@ -171,6 +171,13 @@ eq closeWorldExceptScheduler(sc C) = sc { C } .\end{maude}
     
 \item \textbf{Scheduler Rule:} Continuing with the observation made about the scheduler, a rule $SR$ will be defined inside model.maude, that is in charge of selecting the next rule that is going to be applied to the current system state. For that reason, the $SR$ rule must insert in the scheduler list the scheduler element that has the message that represents the rule chosen by the $SR$ rule.
 
+\item \textbf{Rule Associated to a Message:} Each one of the scheduler elements contains a message \texttt{Mi} that is going to be used to identify the next rule that is going to be executed. Therefore, the associated rule must consider in its definition the presence of the message \texttt{Mi}. Based on this, the rule $R_{M_i}$ can be defined as the rule associated with the message \texttt{Mi}, and specified as:
+\begin{maude}
+
+rl : Mi {gt | SL} {C randomCounter(n)} =>
+        {gt | SL} {C' randomCounter(n)} .\end{maude}
+The rule eliminates the message from the configuration and changes the term \texttt{C} to \texttt{C'}, indicating that the rule has been applied, and the state of the system has been changed.
+
 \item \textbf{Val operator:} This operator is used to define observations over the states of the system, allowing to extract valuable information that can be then evaluated in the MultiQuaTEx query using the \texttt{s.rval()} function, explained in section 2.7. It is defined as:
 \begin{maude}
 
@@ -243,12 +250,11 @@ insert({0.0 | nilSL },[ 0.0 + 1.0 , Mi]) $\rightarrow$ {0.0 | [1.0 , Mi] }
 
 tick({gt | [gt' , Mi]}     $\rightarrow$  Mi {gt' | nilSL }
      {C randomCounter(n)})    {C randomCounter(n)}\end{maude}
-        \item Maude rewrites the term with the rule associated with the message \texttt{Mi}, named $R_{M_i}$:
+        \item Maude rewrites the term with the rule associated with the message \texttt{Mi}:
         \begin{maude}
         
 Mi {gt' | nilSL}    $\xrightarrow{R_{M_i}}$ {gt' | nilSL }
-{C randomCounter(n)}     {C'  randomCounter(n)}
-        \end{maude}
+{C randomCounter(n)}     {C'  randomCounter(n)}\end{maude}
         In this case, the term \texttt{C'} represents the next state of the model after applying $R_{M_i}$ over \texttt{C}.
         \item The rule $SR$ chooses the next rule to be executed, represented with the message \texttt{Mj}:
         \begin{maude}
@@ -276,4 +282,181 @@ The complete process can be visualized in a sequence diagram, that extends the p
     \label{fig:multi5}
 \end{figure}
 
-Based on this introduction to MultiVeStA and chapter 3, the next chapter will present the integration between the rewriting logic approach to probabilistic Event-B and MultiVeStA.
+Based on this introduction to MultiVeStA and chapter 3, the next section will present the integration between the rewriting logic approach to probabilistic Event-B and MultiVeStA.
+
+\section{Using MultiVeStA to verify $\mathscr{R}_\mathscr{M}$}
+
+To verify properties of probabilistic Event-B models encoded as probabilistic rewrite theories $\mathscr{R}_\mathscr{M}$, it is necessary to list the required components to complete this process. First, the mandatory theory to specify the encoded model that wants to be checked, should be included, i.e. the rewrite theory $\mathscr{R}$ with the modules \texttt{SAMPLER}, \texttt{EB-CORE}, \texttt{EBCONTEXT} and \texttt{EBMACHINE}. Then, the model.maude file should specify the system module \texttt{MODEL}, which includes $\mathscr{R}$. The interaction between the model and MultiVeStA is specified in Figure \ref{fig:multi6}.       
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale = 0.5]{images/multi6.png}
+    \caption{Interaction between the encoded model and MultiVeStA}
+    \label{fig:multi6}
+\end{figure}
+Even though the simulation process is the same, as described in Figures \ref{fig:multi3} and \ref{fig:multi5}, it is important to consider and identify the differences that arise when the simulation of the encoded models is done. Hence, the rest of this section will specify and describe how the same series of steps explained in section 4.2, function with the specific case of probabilistic rewrite theories $\mathscr{R}_\mathscr{M}$. Initially, the following list contains the required definitions to understand the simulation process:
+\begin{itemize}
+    \item \textbf{States of the Simulation in $\mathscr{R}_\mathscr{M}$:} Given that the general definition for a state of a model that is going to be verified with MultiVeStA is:
+    \begin{maude}
+
+{gt | SL} {C randomCounter(n)}\end{maude}
+    Then, replacing the term \texttt{C} with the term that represents states in $\mathscr{R}_\mathscr{M}$, the resulting configuration is:
+    \begin{maude}
+    
+{gt | SL} {$\mathfrak{C} \ \mathfrak{M}_{i}  \ \mathfrak{E}$ randomCounter(n)}\end{maude}
+    
+    \item \textbf{Initial State in $\mathscr{R}_\mathscr{M}$:} the initial state of the simulation is specified with the operator \texttt{init} and it is defined as:
+    \begin{maude}
+
+eq init = {0.0 | nilSL} $\mathfrak{C} \ \mathfrak{M}_{0}  \ \mathfrak{E}$ randomCounter(0) .\end{maude}
+    
+    \item \textbf{Messages in $\mathscr{R}_\mathscr{M}$:} The messages that identify the next rule to be applied, are defined for the translated models $\mathscr{R}_\mathscr{M}$ with the operator:
+    \begin{maude}
+
+op _<-_ : Oid Content -> Msg .\end{maude}
+    
+    where the \texttt{Oid} is the object identifier of the machine $\mathfrak{M}$, and the second parameter of sort \texttt{Content} is used to identify the rule that is going to be applied. For example for the brake system example explained in section 2.3 and chapter 3, the message that identifies the push pedal rule in the model would be:
+    \begin{maude}
+
+op RulePushPedal : -> Content [ ctor ] .
+'BrakeSystem <- RulePushPedal\end{maude}
+
+    \item \textbf{Scheduler Rule in $\mathscr{R}_\mathscr{M}$:} In the case of translated models $\mathscr{R}_\mathscr{M}$ by the encoding, the $SR$ rule explained in the previous section corresponds to the $chooseEvt$ rule. To integrate the $chooseEvt$ rule with the scheduler, an auxiliary equation is used to identify the selected rule and insert it to the scheduler. The definition of this rule is:
+    \begin{maude}
+
+var gt : Float .
+var n : Nat .
+var SL : ScheduleList .
+var MNAME : Oid .
+var ruleQid : Qid .
+ 
+op scheduleEvent : Configuration -> Configuration .
+eq scheduleEvent( { gt | SL } 
+                  {$\mathfrak{C} \ \mathfrak{M}_{i} $ 
+                  < events  : Events  | state: ( ev(ruleQid, execute) ) > 
+                  randomCounter(n)} )
+                 =
+                  insert({ gt | SL },
+                         [ gt + 1.0 , (MNAME <- qidToContent(ruleQid)),0]) 
+                  {$\mathfrak{C} \ \mathfrak{M}_{i} $ 
+                  < events  : Events  | state: ( ev(ruleQid, execute) ) > 
+                  randomCounter(n)} .\end{maude}
+    where \texttt{MNAME} is object identifier of the machine $\mathfrak{M}_{i}$, \texttt{ruleQid} is the quoted identifier of the selected rule, and \texttt{qidToContent} is an equation that maps the \texttt{Qid} of every rule, to a term of sort \texttt{Content}.
+
+    \item \textbf{Rule $R_{M_i}$ in $\mathscr{R}_\mathscr{M}$}: the $execEvt_{e_i}$ rule in $\mathscr{R}_\mathscr{M}$, corresponds to the $R_{M_i}$ rule. To adapt each one of the rules $execEvt_{e_i}$ to resemble the behavior of $R_{M_i}$, it is necessary to include in the definition of $execEvt_{e_i}$, the message that represents the event. For example, if the rule $execEvt_{e_i}$ is defined as:
+    \begin{maude}
+
+rl [eventEi]: { gt | SL } $\mathfrak{C} \ \mathfrak{M}_{i}  \ \mathfrak{E}$ randomCounter(n)
+              => 
+              { gt | SL } $\mathfrak{C} \ \mathfrak{M}_{j}  \ \mathfrak{E}$ randomCounter(n)\end{maude}
+    then, the adapted rule is:
+    \begin{maude}
+
+rl [eventEi]: (MNAME <- eventEi) { gt | SL } $\mathfrak{C} \ \mathfrak{M}_{i}  \ \mathfrak{E}$ randomCounter(n)
+              => 
+              { gt | SL } $\mathfrak{C} \ \mathfrak{M}_{j}  \ \mathfrak{E}$ randomCounter(n)\end{maude}
+where \texttt{MNAME} is the \texttt{Oid} of the machine, and \texttt{eventEi} is a term of sort content that identifies the rule.
+\end{itemize}
+
+With these definitions, it is now possible to redefine the simulation steps explained in the previous section:
+
+%---------------------------------------------------------------------------------------------
+%---------------------------------------------------------------------------------------------
+%---------------------------------------------------------------------------------------------
+%---------------------------------------------------------------------------------------------
+%---------------------------------------------------------------------------------------------
+
+
+\begin{enumerate}
+    \setcounter{enumi}{-1}
+    \item The user defines the initial state as:
+    \begin{maude}
+    
+eq init = {0.0 | nilSL} $\mathfrak{C} \ \mathfrak{M}_{0}  \ \mathfrak{E}$ randomCounter(0) . \end{maude}
+    and the state observations:
+    \begin{maude}
+    
+eq val("obs1", {gt | SL} {$\mathfrak{C} \ \mathfrak{M}  \ \mathfrak{E}$ randomCounter(n)}) = ...
+eq val("obs2", {gt | SL} {$\mathfrak{C} \ \mathfrak{M}  \ \mathfrak{E}$ randomCounter(n)}) = ...
+...
+eq val("obsn", {gt | SL} {$\mathfrak{C} \ \mathfrak{M}  \ \mathfrak{E}$ randomCounter(n)}) = ...\end{maude}
+    inside model.maude.
+    
+    \item MultiVeStA loads the apmaude.maude, the files that contain the modules \texttt{SAMPLER}, \texttt{EB-CORE}, \texttt{EBCONTEXT} and \texttt{EBMACHINE}, and the model.maude file which includes the previous modules.
+    \item MultiVeStA sends the command \texttt{rew initState}. 
+    \begin{enumerate}
+        \item Maude reduces the \texttt{initState} term:
+        \begin{maude}
+
+initState $\rightarrow$ {0.0 | nilSL} {$\mathfrak{C} \ \mathfrak{M}_{0}  \ \mathfrak{E}$  randomCounter(0)} .\end{maude}
+        \item The rule $chooseEvt$ chooses the next rule to be executed. The random counter is also incremented:
+        \begin{maude}
+ 
+{0.0 | nilSL }             $\xrightarrow{chooseEvt}$      scheduleEvent({0.0 | nilSL } 
+{$\mathfrak{C} \ \mathfrak{M}_{0} \ \mathfrak{E}$ randomCounter(0)}              {$\mathfrak{C} \ \mathfrak{M}_{0} \ \mathfrak{E'}$ randomCounter(0+1)})\end{maude}
+        where $\mathfrak{E'} = \texttt{<events:Events|state:(ev(ruleQid,execute))}$  
+        
+        \item Maude reduces the terms:
+        \begin{maude}
+                                
+scheduleEvent({0.0 | nilSL } $\rightarrow$ insert({0.0 | nilSL },[0.0+1.0,$MG$,0])
+{$\mathfrak{C} \ \mathfrak{M}_{0} \ \mathfrak{E'}$ randomCounter(0+1)})   {$\mathfrak{C} \ \mathfrak{M}_{0} \ \mathfrak{E'}$ randomCounter(1)}\end{maude}
+
+        \begin{maude}
+                                    
+insert({0.0 | nilSL },[0.0+1.0,$MG$,0]) $   \rightarrow$ {0.0 | [1.0 , $MG$] }
+{$\mathfrak{C} \ \mathfrak{M}_{0} \ \mathfrak{E'}$ randomCounter(1)}                {$\mathfrak{C} \ \mathfrak{M}_{0} \ \mathfrak{E'}$ randomCounter(1)}\end{maude}
+
+Where $MG = \texttt{(MNAME<-qidToContent(ruleQid))}$
+    \end{enumerate}
+
+\item Do steps 3, 4 and 5 from the previous section.
+
+\item MultiVeStA sends the command \texttt{rew tick(Conf)}.
+    \begin{enumerate}
+        \item Maude reduces the term \texttt{rew tick(Conf)}:
+        \begin{maude}
+
+tick({gt | [gt' , $MG$]}     $\rightarrow$  $MG$ {gt' | nilSL }
+{$\mathfrak{C} \ \mathfrak{M}_{i} \ \mathfrak{E'}$ randomCounter(n)})     {$\mathfrak{C} \ \mathfrak{M}_{i} \ \mathfrak{E'}$ randomCounter(n)}\end{maude}
+        \item Maude rewrites the term with the rule associated with the message \texttt{Mi}:
+        \begin{maude}
+        
+$MG$ {gt' | nilSL }    $\xrightarrow{execEvt_{e_i}}$ {gt' | nilSL }
+{$\mathfrak{C} \ \mathfrak{M}_{i} \ \mathfrak{E'}$ randomCounter(n)}     {$\mathfrak{C} \ \mathfrak{M}_{j} \ \mathfrak{E}$  randomCounter(n)}\end{maude}
+        
+        Where $\mathfrak{M}_{j}$ is the next system state after applying the rule $execEvt_{e_i}$. Note that $\mathfrak{E} = \langle events : Events \ | \ state: ev(e_1,unknown) ... ev(e_n, unknown) \rangle$
+        \item The rule $chooseEvt$ chooses the next rule to be executed:
+        \begin{maude} 
+
+{gt' | nilSL }             $\xrightarrow{chooseEvt}$      scheduleEvent({gt' | nilSL } 
+{$\mathfrak{C} \ \mathfrak{M}_{j} \ \mathfrak{E}$ randomCounter(n)}              {$\mathfrak{C} \ \mathfrak{M}_{j} \ \mathfrak{E'}$ randomCounter(n+1)})\end{maude}
+where $\mathfrak{E'} = \texttt{<events:Events|state:(ev(ruleQid,execute))}$.
+
+        \item Maude reduces the terms:
+        \begin{maude}
+        
+scheduleEvent({gt' | nilSL }  $\rightarrow$   {gt' | [gt' + 1.0 , $MG$]}   
+{$\mathfrak{C} \ \mathfrak{M}_{j} \ \mathfrak{E'}$ randomCounter(n+1)})      {$\mathfrak{C} \ \mathfrak{M}_{j} \ \mathfrak{E'}$ randomCounter(n+1)})\end{maude}
+    \end{enumerate}
+
+    \item Repeat step 3.
+    
+    \item If the query is satisfied, then get the float number returned by the query. If not, then repeat steps 4 trough 6 over the previous configuration \texttt{Conf}, until the formula is satisfied.
+\end{enumerate}
+Following this process, it is then possible to do statistical model checking over $\mathfrak{R}_{M} $ rewrite theories, and evaluate MultiQuaTEx queries. In the next section, some case studies will be presented to illustrate the interplay between the encoder and MultiVeStA.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
