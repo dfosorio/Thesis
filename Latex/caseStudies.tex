@@ -6,7 +6,7 @@
     %1) Description of the model with Event-B code
     %2) Results of the simulation
 
-The purpose of these case studies is to test the correct integration of the encoder with the MultiVeStA tool. In total there are 3 case studies: two probabilistic programs using dices and coins, a bounded re-transmission protocol, and a program that simulates a modal operator in positive negative logic. The repository that contains the code of this integration can be found in the following repository: \url{https://github.com/dfosorio/EventB2Maude-MultiVeStA}. Furthermore, this repository contains the code of the probabilistic Event-B models, their translated versions in PMaude, and the results of the simulations. A short guide on how to use the software can also be found in the repository, for any reader that might want use the tool.
+The purpose of these case studies is to test the correct integration of the encoder with the MultiVeStA tool. In total there are 3 case studies: two probabilistic programs using dices and coins, a bounded re-transmission protocol, and a program that simulates a modal operator in positive negative logic. The repository that contains the code of this integration can be found in the following repository: \url{https://github.com/dfosorio/EventB2Maude-MultiVeStA}. Furthermore, this repository contains the code of the probabilistic Event-B models, their translated versions in PMaude, and the results of the simulations of the case studies. A short guide on how to use the software can also be found in the repository, for any reader that might want use the tool.
 
 
 
@@ -243,13 +243,13 @@ The file can be considered as an array of values. Therefore, sending data to the
     \caption{File transmission process from the sender to the receiver, taken from \cite{Abrial2011}}
     \label{fig:cs6}
 \end{figure}
-The protocol is completed when all the elements from the file have been transferred to the receiver, therefore reaching the success state. If the complete process is then represented as a series of steps, the resulting list is:
+The protocol is completed when all the elements from the file have been transferred to the receiver, therefore reaching the success state. If the complete process is represented as a series of steps, the resulting list is:
 \begin{enumerate}
     \item Initialize the system, i.e. initialize the file in the senders memory and other necessary variables for the transmission process.
     \item The sender sends the first element of the file.
     \item The receiver receives the sent element and returns to the sender the acknowledge signal.
     \item The sender receives the acknowledge signal.
-    \item Steps 2,3 and 4 are repeated with the following element, until sending all the elements of the file to the receiver. In that case, the system enters the success state, and the procedure is finished.
+    \item Steps 2, 3 and 4 are repeated with the following element, until sending all the elements of the file to the receiver. In that case, the system enters the success state, and the procedure is finished.
 \end{enumerate}
 The complete process can be visualized in Figure \ref{fig:cs7}:
 \begin{figure}[H]
@@ -267,7 +267,7 @@ Now, lets consider a model where both the data and acknowledge channel are unrel
 \end{figure}
 In order to assign probabilities to the previously explained model, every time the sender or the receiver send information to one another, there is a $50\%$ chance of failure. Inside the \texttt{b-retrans-5.b} file, this behavior can be specified by assigning the same weight to the events that specify the action of sending successfully the message, and the events that specify the failure in the communication channels. Hence, the weight assigned to all the events is 1.
 
-Given this probabilistic model, the property that wants to be verified using MultiVeStA is the probability of reaching the success state, using the maximum number of retries \textit{MAX}, as a parameter of the model. Thus, using the encoder the \texttt{b-retrans-5.b} model was translated into PMaude. The user defined observations where:
+Given this probabilistic model, the property that wants to be verified using MultiVeStA is the probability of reaching the success state, using the maximum number of retries \textit{MAX}, as a parameter of the model. Thus, using the encoder, the \texttt{b-retrans-5.b} model was translated into PMaude. The user defined observations where:
 \begin{itemize}
     \item \textbf{``obs1":} returns 1.0 if the state of the system is failed, and 0.0 otherwise.
     \item \textbf{``obs2":} returns 1.0 if the state of the system is success, and 0.0 otherwise.
@@ -282,7 +282,7 @@ eval E[ PRetrans5("obs1") ] ;
 eval E[ PRetrans5("obs2") ] ;
 \end{maude2}
 
-It states that when the system reaches a terminating state, i.e. reaching the failure or success state, since both of these states means that the system enters a deadlock, then the formula verifies if the state of the system is successful or failed.
+It states that when the system reaches a terminating state, i.e. reaching the failure or success state, since both of these states mean that the system enters a deadlock, then the formula verifies if the state of the system is successful or failed.
 Using this formula, parameters $\alpha = 0.01, \delta = 0.01$, $bs = 100$, a fixed size for the file $N = 100$, and multiple values for the maximum number of retries $MAX$, the results of the simulation where:
 
 % Please add the following required packages to your document preamble:
@@ -318,10 +318,10 @@ File size            & \textit{MAX}        & Simulations            & Time in se
     \label{fig:cs9}
 \end{figure}
 
-As seen in both the result table and the graph in Figure \ref{fig:cs9}, the probability of success is directly proportional to the maximum number of retries. Conversely, the probability of failure is inversely proportional to the maximum number of retries. This is the expected behavior, since incrementing the maximum number of retries of the protocol should increase the probability that the file is sent completely. It is important to note, that not all of the simulations reached the desired confidence interval ($CI < 0.01$). The reason behind this, is that the time it  was taking to reach the desired confidence interval was overly long, as seen in the previous table. Hence, some of the simulations were stopped before reaching the desired confidence interval. Nevertheless, the obtained confidence interval for the stopped simulations is good enough (approximately $CI < 0.023)$) to approximate the probability of reaching a success or failure state.
+As seen in both the result table and the graph in Figure \ref{fig:cs9}, the probability of success is directly proportional to the maximum number of retries. Conversely, the probability of failure is inversely proportional to the maximum number of retries. This is the expected behavior, since incrementing the maximum number of retries of the protocol should increase the probability that the file is sent completely. It is important to note, that not all of the simulations reached the desired confidence interval ($CI < 0.01$). The reason behind this, is that the time it  was taking to reach the desired confidence interval was overly long, as seen in the previous table. Hence, some of the simulations were stopped before reaching the desired confidence interval. Nevertheless, the obtained confidence interval for the stopped simulations is good enough (approximately $CI < 0.023$) to approximate the probability of reaching a success or failure state.
 
 \section{Balance Property in Signed Frames}
-Positive negative logic or \textit{PNL} is a modal logic for Kripke structures introduced in \cite{PNL1, PNL2}, used to define properties over a specific class of network. For the moment, this section will only focus on the \textit{signed frame} structure and a dynamic model that modifies signed frames. The reader is encouraged to read the cited articles to understand the syntax, semantics and extension of PNL. Continuing then with the explanation, in these networks the nodes of the represent agents, and the connections or edges between them represent if two agents share the same or contrary opinion of a particular topic. Formally speaking, a network is represented as a signed frame of the form $\mathbb{F} = \langle A, R^+, R^- \rangle$, where $A$ is a set of agents, and $R^+,R^-$ are reflexive binary relations from $A$ to $A$. For any agent $a,b \in A$, if $(a,b) \in R^+$ then it means that agents $a$ and $b$ share the same opinion. Conversely, if $(a,b) \in R^-$, then $a$ and $b$ have different opinions. For example, lets consider the signed frame:
+Positive negative logic or \textit{PNL} is a modal logic for Kripke structures introduced in \cite{PNL1, PNL2}, used to define properties over a specific class of network. For the moment, this section will only focus on the \textit{signed frame} structure and a dynamic model that modifies signed frames. The reader is encouraged to read the cited articles to understand the syntax, semantics and extension of PNL. Continuing then with the explanation, in these networks the nodes represent agents, and the connections or edges between them represent if two agents share the same or contrary opinion of a particular topic. Formally speaking, a network is represented as a signed frame of the form $\mathbb{F} = \langle A, R^+, R^- \rangle$, where $A$ is a set of agents, and $R^+,R^-$ are reflexive binary relations from $A$ to $A$. For any agent $a,b \in A$, if $(a,b) \in R^+$ then it means that agents $a$ and $b$ share the same opinion. Conversely, if $(a,b) \in R^-$, then $a$ and $b$ have different opinions. For example, lets consider the signed frame:
 \begin{align*}
     \mathbb{F} = \langle \{a,b,c,d\}, \{(a,c),(b,d)\},\{(a,b),(a,d), (b,c)\} \rangle
 \end{align*}
@@ -332,7 +332,7 @@ Graphically, this signed frame is represented by the graph:
     \caption{Graph that represents the signed frame $\mathbb{F}$, taken from \cite{PNL1}}
     \label{fig:CS10}
 \end{figure}
-One of the important properties that define these type of graph is the balance property. In short, A signed frame $\mathbb{F}$ is said to have the balance property, if $\forall a,b,c \in A$:
+One of the important properties that define these type of graph is the balance property. In short, a signed frame $\mathbb{F}$ is said to have the balance property, if $\forall a,b,c \in A$:
 \begin{itemize}
     \item if $aR^+b$ and $bR^+c$, or $aR^-b$ and $bR^-c$, then $aR^+c$ and
     \item if $aR^+b$ and $bR^-  c$, or $aR^-b$ and $bR^+c$, then $aR^-c$.
@@ -344,7 +344,7 @@ One of the extensions proposed to PNL in the article \cite{PNL1}, are the modali
 \begin{figure}[H]
     \centering
     \includegraphics[scale=0.5]{images/CS11.png}
-    \caption{Initial and possible terminating state of a simulation the dynamic system.}
+    \caption{Initial and possible terminating state of a simulation of the dynamic system.}
     \label{fig:CS11}
 \end{figure}
 
@@ -456,7 +456,7 @@ PPNL(balanced) & 2735.93         & 46400       & 0.497948164146868 & 0.250001189
 }
 \end{table}
 
-As seen in the table, the obtained value for the formula is within the expected range of the real value. It is worth noting that the desired confidence interval with $\delta = 0.01$ was not reached since in the next MultiVeStA cycle, the returned value for the confidence interval was \texttt{NaN}, i.e. not a number. For time being, it is not clear the source of this behavior, but with the previously obtained values, it is possible to form an idea on the expected value for the query. The other two experiments correspond to the following signed frames:
+As seen in the table, the obtained value for the formula is within the expected range of the real value. It is worth noting that the desired confidence interval with $\delta = 0.01$ was not reached since in the last MultiVeStA cycle, the returned value for the confidence interval was \texttt{NaN}, i.e. not a number. For the time being, the source of this behavior is unclear, but with the previously obtained values, it is possible to form an idea on the expected value for the query. The other two experiments correspond to the following signed frames:
 
 \begin{figure}[H]
     \centering

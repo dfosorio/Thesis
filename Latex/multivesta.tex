@@ -1,12 +1,6 @@
 \chapter{MultiVeStA: Statistical Model Checking of PMaude Specifications}
 
-As mentionde before, MultiVeStA is an extension of both VeStA and PVeStA that can be used to perform statistical model checking of PMaude specifications. Therefore, the main purpose of this chapter is to present a general introduction to understand how MultiVeSta works, and how it can be used. This chapter is divided in the following sections:
-\begin{enumerate}
-    \item Components of MultiVeStA
-    \item how MultiVeSta algorithm works
-    \item PMaude an MultiVeStA integration
-    %make a note that a tutorial of how to use it is in the github
-\end{enumerate}
+As mentioned before, MultiVeStA is an extension of both VeStA and PVeStA that can be used to perform statistical model checking of PMaude specifications. Hence, the main purpose of this chapter is to present a general introduction to understand how MultiVeStA works, and how it can be used to verify PMaude specifications, obtained with the encoding from the previous chapter.
 
 \section{MultiVeSta's components and processes}
 First and foremost, the MultiVeSta tool was developed by Andrea Vandin, and it is available to download in a public repository in GitHub \cite{multiGit}. The main components of the tool are:
@@ -38,8 +32,8 @@ The way MultiVeStA obtains these simulation results, can be defined in the follo
 \begin{enumerate}
     \item MultiVeStA performs $bs$ number of simulations and calculates the confidence interval based on the results obtained in each one of the simulations. Each simulation consists of:
         \begin{enumerate}
-            \item Get the initial state of the system $s_0$ by running \textit{model.maude}, which includes the theory specified in \textit{apmaude.maude},using the \textit{Maude-3.0+yices2} distribution.
-            \item Evaluate the MultiQuaTEx formula in \textit{query.multiquatex} over $s_0$. If the formula is satisfied, then the simulation ends and the result of the query is returned. Otherwise, MultiVeStA performs  a one step in the simulation, to get the next state $s_i$.
+            \item Get the initial state of the system $s_0$ by running \textit{model.maude}, which includes the theory specified in \textit{apmaude.maude}, using the \textit{Maude-3.0+yices2} distribution.
+            \item Evaluate the MultiQuaTEx formula in \textit{query.multiquatex} over $s_0$. If the formula is satisfied, then the simulation ends and the result of the query is returned. Otherwise, MultiVeStA performs one step in the simulation, to get the next state $s_i$.
             \item Repeat step b with the new state $s_i$, until reaching a state where the formula is satisfied and the results are returned. 
         \end{enumerate}
     As shown in section 2.7, the result of a MultiQuaTEx formula is a floating point value. Therefore, with each one of the values returned by the query in each simulation, the confidence interval of the batch is calculated.
@@ -54,7 +48,7 @@ In general, the complete process can be viewed in the following flowchart:
     \label{fig:multi3}
 \end{figure}
 
-Having understood how the general process to perform simulations in MultiVeStA is done, it is necessary to define how to modify a PMaude specification to be able to run it with the tool. To do this, in the next section a general explanation will be given that illustrates how individual simulations work (sub-steps a,b and c from the step 1), and how this can be achieved including new elements into the PMaude models that is going to be verified.
+Having understood how the general process to perform simulations in MultiVeStA is done, it is necessary to define how to modify a PMaude specification to be able to run it with the tool. To do this, in the next section a general explanation will be given that illustrates how individual simulations work (sub-steps a, b and c from the step 1), and how this can be achieved by including new elements into the PMaude models that are going to be verified.
 
 \section{MultiVeStA and Maude interaction}
 The way MultiVeStA sends and retrieves information from Maude, is through the Maude console. Initially, MultiVeStA loads the apmaude.maude and model.maude file through the Maude console. Then, MultiVeStA sends commands to the Maude console and Maude executes these commads. Finally, MultiVeStA reads these results from the Maude's console and use them to calculate the results of the simulations. This process is captured in the following sequence diagram:
@@ -443,7 +437,7 @@ scheduleEvent({gt' | nilSL }  $\rightarrow$   {gt' | [gt' + 1.0 , $MG$]}
     
     \item If the query is satisfied, then get the float number returned by the query. If not, then repeat steps 4 trough 6 over the previous configuration \texttt{Conf}, until the formula is satisfied.
 \end{enumerate}
-Following this process, it is then possible to do statistical model checking over $\mathfrak{R}_{M} $ rewrite theories, and evaluate MultiQuaTEx queries. In the next section, some case studies will be presented to illustrate the interplay between the encoder and MultiVeStA.
+Following this process, it is then possible to do statistical model checking over $\mathscr{R}_\mathscr{M}$ rewrite theories, and evaluate MultiQuaTEx queries. In the next section, some case studies will be presented to illustrate the interplay between the encoder and MultiVeStA.
 
 
 

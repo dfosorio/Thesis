@@ -66,7 +66,7 @@ Where $\llbracket \mathscr{M} \rrbracket_{id}$ encodes the machine's identifier 
 \end{itemize}
 
 \section{Events' States in Maude}
-In order to simulate the behavior of probabilistic Event-B in Maude, it is necessary to have a deterministic method to choose the next event that is going to be executed during simulation. To do this, it is necessary to define a structure that contains the states of the events in each system configuration. These possible event's states are:
+In order to simulate the behavior of probabilistic Event-B in Maude, it is necessary to have a probabilistic method to choose the next event that is going to be executed during simulation. To do this, it is necessary to define a structure that contains the states of the events in each system configuration. These possible event's states are:
 \begin{itemize}
     \item \textbf{\textit{unknown}:} the event's guards have not been evaluated.
     \item \textbf{\textit{enabled(n)}:} the event's guard is true with weight $n$.
@@ -79,7 +79,7 @@ Let $\mathscr{M}$ be a probabilistic machine. The corresponding encoding of the 
     \begin{align*}
     & \langle \ events : Events \ | \ state :  \llbracket \mathscr{M} \rrbracket_{initEvtSt}  \ \rangle
     \end{align*}
-Where $\llbracket \mathscr{M} \rrbracket_{initEvtSt}$ encodes the initialization of the event's states. The resulting term has sort \texttt{CONFIGURATION}, and represents an object of the class \texttt{Events}, with attribute \texttt{state}. $\llbracket \mathscr{M} \rrbracket_{initEvtSt}$ returns a set $ev(evt_1,st_1), ..., ev(evt_n,st_n)$ where each $evt_i$ is a quoted identifier that represents the name of the event, and $st_i$ is a term of sort \texttt{EvState}, that represents the state of the event. In this case, all of the $st_i = \texttt{unknown}$ , since in the initialization of the model none of the guards of the event have been evaluated. For the brake system, the resulting term after the encoding would be:
+Where $\llbracket \mathscr{M} \rrbracket_{initEvtSt}$ encodes the initialization of the event's states. The resulting term has sort \texttt{CONFIGURATION}, and represents an object of the class \texttt{Events}, with attribute \texttt{state}. $\llbracket \mathscr{M} \rrbracket_{initEvtSt}$ returns a set $ev(evt_1,st_1), ..., ev(evt_n,st_n)$ where each $evt_i$ is a quoted identifier that represents the name of the event, and $st_i$ is a term of sort \texttt{EvState}, that represents the state of the event. In this case, all of the $st_i = \texttt{unknown}$ , since in the initialization of the model none of the guards of the events have been evaluated. For the brake system, the resulting term after the encoding would be:
 \begin{maude}
 
 < events : Events | state: (ev('PushPedal, unknown) 
@@ -181,7 +181,7 @@ Using all the previously explained elements of the rewrite theory $\mathscr{R}_\
 
 
 \begin{enumerate}
-    \item The probabilistic Event-B is encoded to the rewrite theory $\mathscr{R}_\mathscr{M}$, using $\llbracket \cdot \rrbracket$:
+    \item The probabilistic Event-B model is encoded to the rewrite theory $\mathscr{R}_\mathscr{M}$, using $\llbracket \cdot \rrbracket$:
     \begin{align*}
         \llbracket \cdot \rrbracket: (\mathscr{C}, \mathscr{M}) \rightarrow \mathscr{R}_\mathscr{M}
     \end{align*}
