@@ -1,28 +1,27 @@
 \documentclass[12pt]{report}
 \usepackage{macros}
+\usepackage{cover}
 
-\title{EventB2Maude: Probabilistic Modeling and Statistical Model Checking for Event-B with Probabilistic Rewrite Theories and MultiVeStA}
-\author{Daniel F. Osorio-Valencia}
-\date{\today}
+%used for the cover & letters---------------------------
+\titulo{EventB2Maude: Probabilistic Modeling and Statistical Model Checking for Event-B with Probabilistic Rewrite Theories and MultiVeStA}
+\autorA{8946508}{Daniel F. Osorio-Valencia}
+\fecha{Abril 28 del 2023}
+\directorproyecto{Dr.}{Camilo Rocha}
+\directorcarrera{Dr.}{Gerardo Sarria}
+%-------------------------------------------------------
 
 \begin{document}
-
 \maketitle
-
+\makecoverletter
 \include{acknowledgments}
 \include{abstract}
-
 \tableofcontents
-
 \include{introduction}
 \include{preliminaries}
 \include{EventB2Maude}
 \include{multivesta.tex}
 \include{caseStudies}
 \include{conclusions}
-
 \bibliographystyle{ieeetr}
 \bibliography{references}
-
-
 \end{document}

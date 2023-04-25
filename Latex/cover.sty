@@ -1,0 +1,123 @@
+%% Edited by colarte
+\usepackage{ifthen}
+\def\authorB{}
+\def\authorBCOD{}
+
+%% end Colarte
+
+%% Edited by colarte
+%Nombre del director de carrera
+\newcommand{\fecha}[1]{\def \fecha{#1}}
+
+
+%Nombre del Trabajo
+\newcommand{\titulo}[1]{\def \titulovar{#1}}
+
+%Nombre del director del proyecto
+\newcommand{\directorproyecto}[2]{\def \director{#1 #2}}
+%Nombre del director de carrera
+\newcommand{\directorcarrera}[2]{\def \directorcarrera{#1 #2}}
+%Primer autor
+\newcommand{\autorA}[2]{\def \authorA{#2}\def \authorACOD{#1}}
+\newcommand{\autorB}[2]{\def \authorB{#2}\def \authorBCOD{#1}}
+% Carta de aceptacion del director
+
+\newcommand{\makecoverletter}{
+\thispagestyle{empty}
+\ \newpage
+\thispagestyle{empty}
+\noindent Santiago de Cali, \fecha. \\
+\vspace{2cm}\\
+\noindent Se\~nores\\
+\noindent {\bf Pontificia Universidad Javeriana Cali.}\\
+\noindent \directorcarrera \\
+\noindent Director Carrera de Ingenier\'ia de Sistemas y Computaci\'on. \\
+Cali.
+\vspace{2cm}\\
+\noindent Cordial Saludo.\\\\\\
+Por medio de la presente hacemos constar que hemos revisado el proyecto de grado \\ ``\titulovar'', del estudiante
+de Ingeniería de Sistemas y Computación {\authorA ~(cod: \authorACOD)}, del cual
+soy director, y lo considero apto para ser presentado y sometido a consideración del jurado.\\\\\\
+
+\noindent Atentamente,\\\\
+\\\vspace{2cm}\\
+\line(1,0){200}\\
+\director
+
+\newpage
+
+%%%%%%%%%% 2nd Letter %%%%%%%%%%%%%
+\thispagestyle{empty}
+\noindent Santiago de Cali, \fecha. \\
+\vspace{2cm}\\
+\noindent Se\~nores\\
+\noindent {\bf Pontificia Universidad Javeriana Cali.}\\
+\noindent \directorcarrera \\
+\noindent Director Carrera de Ingenier\'ia de Sistemas y Computaci\'on. \\
+Cali.
+\vspace{2cm}\\
+\noindent Cordial Saludo.\\\\\\
+
+Tengo el placer de presentar ante usted el proyecto de grado titulado como ``\titulovar'', para ser sometido a consideración del jurado. Espero que este proyecto de grado reúna los requisitos académicos necesarios para su aprobación.
+ 
+\ \\\\\\ \noindent Atentamente,\\\\
+\\\vspace{2cm}\\
+\ifthenelse{\equal{\authorB}{}}
+{
+\line(1,0){200}\\
+\authorA\\
+C\'odigo: \authorACOD
+}
+{
+\begin{tabular}{p{8cm}p{8cm}}
+\line(1,0){200}&\line(1,0){200} \\
+\authorA & \authorB\\
+C\'odigo: \authorACOD &
+C\'odigo: \authorBCOD
+\end{tabular}
+}
+}
+
+%%%%%%%%%% Cover %%%%%%%%%%%%%
+\renewcommand\maketitle{\begin{titlepage}%
+  % Edited by C. Olarte
+  \begin{center}
+   \large
+   Pontificia Universidad Javeriana Cali\\
+   Facultad de Ingenier\'ia.\\
+   Ingenier\'ia de Sistemas y Computaci\'on.\\
+   Proyecto de Grado. 
+  \end{center}
+\vspace{2cm}
+  \begin{center}%
+    {\LARGE \titulovar \par}%
+    \vskip 3em%
+    {\large
+     \lineskip .75em%
+      \begin{tabular}[t]{c}%
+        \authorA\\
+        \authorB\\\\
+	Director: \director
+      \end{tabular}\par}%
+      \vskip 1.5em%
+	\vspace{1cm}
+    {\large \fecha \par}%       % Set date in \large size.
+  \end{center}\par
+  \@thanks
+  \vfil\null
+\begin{center}
+\includegraphics[width=8cm]{images/pujlogo.png}
+\end{center}
+  \end{titlepage}%
+  \setcounter{footnote}{0}%
+  \global\let\thanks\relax
+  \global\let\maketitle\relax
+  \global\let\@thanks\@empty
+  \global\let\@author\@empty
+  \global\let\@date\@empty
+  \global\let\@title\@empty
+  \global\let\title\relax
+  \global\let\author\relax
+  \global\let\date\relax
+  \global\let\and\relax
+}
