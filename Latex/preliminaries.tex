@@ -1,5 +1,5 @@
 \chapter{Preliminaries}
-The main purpose of this chapter is to present the needed theoretical and technical background to understand how the encoding from probabilistic Event-B models to probabilistic rewrite theories, presented in \cite{Olarte}, works. Moreover, it will also allow to understand the proposed adaptations to the tool in \cite{tool.website}, to perform simulations with MultiVeStA over the encoded Event-B models. Therefore, a short but sufficient definition of various concepts and tools, will be given. To guide the reader through the different sections of this chapter and facilitate its reading, the following section dependency is given:
+The main purpose of this chapter is to present the theoretical and technical background necessary to understand how the encoding from probabilistic Event-B models to probabilistic rewrite theories, presented in \cite{Olarte}, works. Moreover, it will also allow to understand the proposed adaptations to the tool in \cite{tool.website}, to perform simulations with MultiVeStA over the encoded Event-B models. Therefore, a short but sufficient definition of various concepts and tools, will be given. To guide the reader through the different sections of this chapter and facilitate its reading, the following section dependency is given:
 
 \begin{figure}[H]
     \centering
@@ -33,33 +33,26 @@ squarednode/.style={rectangle, draw=red!60, fill=red!5, very thick, minimum size
 
 \section{Event-B}
 %explain what event B is generally
-Event-B \cite{Abrial2011,Butler2013} is a formal method for specifying and verifying properties about systems based on set theory and predicate logic. Specifications in Event-B are referred to as models, and they are semantically modeled by a discrete labeled transition system or LTS \cite{LTS}. The main components of an Event-B model are machines and contexts: machines contain the dynamic elements of the model, while contexts contain the static ones. Specifically, machines contain the system variables, invariants, theorems, variant and events. On the other hand, contexts contain carrier sets, constants, axioms and theorems. Both machines and contexts have different interactions between them. A machine can ``\textbf{see}" one or several contexts, meaning that the machine includes the static elements specified in these contexts. Furthermore, machines can ``\textbf{refine}" other machines, which means that if a machine $M_2$ refines a machine $M_1$, then $M_2$ can use all the dynamic elements specified in $M_1$ and also create new ones that respect the properties defined in $M_1$ (for example properties defined as invariants). This relation also occurs in the same way between contexts, when one context ``\textbf{extends}" another one.
-%explain what a Context is and syntax 
+Event-B \cite{Abrial2011,Butler2013} is a formal method for specifying and verifying properties about systems based on set theory and predicate logic. Specifications in Event-B are referred to as models, and they are semantically interpreted as discrete labeled transition system or LTS \cite{LTS}. The main components of an Event-B model are machines and contexts: machines contain the dynamic elements of the model, while contexts contain the static ones. Specifically, machines contain the system variables, invariants, theorems, variant and events. On the other hand, contexts contain carrier sets, constants, axioms and theorems. Both machines and contexts have different interactions between them. A machine can ``\textbf{see}" one or several contexts, meaning that the machine accesses the static elements specified in these contexts. Furthermore, machines can ``\textbf{refine}" other machines, which means that if a machine $M_2$ refines a machine $M_1$, then $M_2$ can use all the dynamic elements specified in $M_1$ and also create new ones that respect the properties defined in $M_1$ (for example properties defined as invariants). This relation also occurs in the same way between contexts, when one context ``\textbf{extends}" another one. The idea behind extending contexts and refining machines is to add new elements and more detail to the original specifications %explain what a Context is and syntax 
 In terms of syntax, the general structure for contexts is depicted in Figure \ref{fig:eventb2}. The definition for each one of the elements of the syntax is:
 \begin{itemize}
     \item \textit{context\_identifier} is a string that identifies the context. The context identifier must be different to all the other identifiers of the components of the system (other machines or contexts).
     \item The ``\textbf{extends}" clause lists all the contexts identifiers that the current context is extending.
-    \item The ``\textbf{sets}" clause takes a list of set identifiers. Each one of these set identifiers correspond to the name of one of the carrier sets of the model. A carrier set is a user defined set or type, that must be non-empty. The set of set identifiers of a model is defined as $\bar{s} = \{s_1...s_n\}$. 
+    \item The ``\textbf{sets}" clause takes a list of set identifiers. Each one of these set identifiers correspond to the name of one of the carrier sets of the model. A carrier set is a user defined  non-empty set. The set of set identifiers of a model is defined as $\bar{s} = \{s_1...s_n\}$. 
     \item The ``\textbf{constants}" clause lists all the constants of the model. The set of constants identifiers is defined as $\bar{c} = \{c_1...c_n\}$.
     \item The ``\textbf{axioms}" clause introduces the list of axioms that the model must satisfy. The Axioms are a conjunction of predicates over sets $\bar{s}$ and constants $\bar{c}$ defined as $A(\bar{s},\bar{c})$. These logic predicates state the properties that the constants and sets must meet.
     \item The ``\textbf{theorems}" clause lists some logic predicates, that must be proved within the context using the axioms. These are logic predicates defined as $T_i(\bar{s},\bar{c})$.
 \end{itemize}
-\begin{figure}
+
+\begin{figure}[H]
     \centering
-    \includegraphics[scale = 0.3]{images/eventb2.PNG}
+    \includegraphics[scale = 0.5]{images/eventb2.PNG}
     \caption{Context structure, taken from \cite{Abrial2011}}
     \label{fig:eventb2}
 \end{figure}
 
 %explain what a Machine is and syntax
-The general structure of the machine is specified in Figure \ref{fig:eventb3}.  
-\begin{figure}
-    \centering
-    \includegraphics[scale = 0.4]{images/eventb3.PNG}
-    \caption{Machine structure, taken from \cite{Abrial2011}}
-    \label{fig:eventb3}
-\end{figure}
-Each one of its components correspond to:
+The general structure of the machine is specified in Figure \ref{fig:eventb3}. Each one of its components correspond to:
 \begin{itemize}
     \item \textit{machine\_identifier} is a string that identifies the machine. It must be different from all the other components identifiers.
     \item The ``\textbf{refines}" clause contains the identifier of the machine that this machine refines.
@@ -70,22 +63,30 @@ Each one of its components correspond to:
     \item The ``\textbf{variant}" clause is used when machines have \textit{convergent events}. It specifies an expression $V(\bar{v})$ over the variables used for proving convergence of the model.
     \item The ``\textbf{events}" clause lists the events of the model. Each event represents a system transition, that changes the current system state to another.
 \end{itemize}
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale = 0.5]{images/eventb3.PNG}
+    \caption{Machine structure, taken from \cite{Abrial2011}}
+    \label{fig:eventb3}
+\end{figure}
+
+
 Events are very important components of an Event-B model and they have the following structure:
 \begin{align*}
     \textbf{event} \; e \; \textbf{any} \; \bar{t} \; \textbf{where} \; G(\bar{t}, \bar{v}) \; \textbf{then} \; S(\bar{t}, \bar{v}) \; \textbf{end} 
 \end{align*}
 \begin{itemize}
     \item $e$ is the \textit{event\_identifier}, which is a string that identifies the event.
-    \item The ``\textbf{any}" clause lists the parameters of the event. The set of parameters of an event is represented by $\bar{t} = \{t_1,...,t_n\}$.
+    \item The ``\textbf{any}" clause lists the parameters of the event. These parameters represent unknown values, conditioned by the guards of the event. The set of parameters of an event is represented by $\bar{t} = \{t_1,...,t_n\}$.
     \item The ``\textbf{where}" clause contains the guards of the event. Guards are represented as a conjunction of logic predicates $G(\bar{t}, \bar{v})$ over the parameters of the event and variables of the system. These guards specify the conditions that must hold for the event to be enabled.
     \item The ``\textbf{then}" clause contains the list of actions of the event. Actions define variable assignments that change the variable values (and thus the state of the system) when the event is executed. These actions are represented as a set of assignments $S(\bar{t}, \bar{v})$.
 \end{itemize} 
 %explain what is an action
 Event assignments can be categorized in three types:
 \begin{itemize}
-    \item Deterministic assignment $x := E(\bar{t},\bar{v})$ states that if the event is executed, then the value of variable $x$ in the next model state will be $E(\bar{t},\bar{v})$, where $E$ is an expression over the parameters of the event and the variables of the system.
+    \item Deterministic assignment $x := E(\bar{t},\bar{v})$ states that if the event is executed, then the value of variable $x$ in the next state will be $E(\bar{t},\bar{v})$, where $E$ is an expression over the parameters of the event and the variables of the system.
     \item Non-deterministic assignment $x :\in  \{ E_1(\bar{t},\bar{v})... E_n(\bar{t},\bar{v}) \}$ called enumerated assignment. In this case, one of the expressions $E_i$ of the set is assigned non-deterministically to variable $x$, when the event is executed.
-    \item Non-deterministic assignment $x :\! | \; Q(\bar{t}, \bar{v}, x, x')$ denoted as predicate assignment. It assigns to variable $x$ the value $x'$, s.t. $x'$ satisfies the predicate $Q(\bar{t}, \bar{v}, x, x')$.
+    \item Non-deterministic assignment $x :\! | \; Q(\bar{t}, \bar{v}, x, x')$ denoted as predicate assignment. It assigns to variable $x$ a value denoted by $x'$, s.t. $x'$ satisfies the predicate $Q(\bar{t}, \bar{v}, x, x')$.
 \end{itemize}
 The set of events of a model is called as $Evts$. This set includes the \textit{INITIALISATION} event or $Init$, which assigns the initial value to all the variables of the machine and creates the initial state of the model. The initial state must be deterministic in all Event-B specifications. A whole Event-B model can be represented as a context $\mathscr{C} = (\bar{s},\bar{c}, A(\bar{s},\bar{c}))$ and a machine $\mathscr{M} =(\bar{v}, I(\bar{v}), V(\bar{v}), Evts, Init)$.
 %provide a simple example
@@ -93,7 +94,7 @@ To clarify this notation, an example of an Event-B model of a brake system, pres
 
 \begin{example}
 \normalfont
-A brake system (derived from the example presented in \cite{Aouadhi2017}) consists of two parts: a pedal and a brake. The pedal can be up or down, and the brake can be applied or released. When the pedal is up, the brake is released. When the pedal is down, the brake is then applied. The resulting Event-B specification for such model is represented in Figure \ref{fig:brake1} and \ref{fig:brake2}.
+A brake system (derived from the example presented in \cite{Aouadhi2017}) consists of two parts: a pedal and a brake. The pedal can be \textit{up} or \textit{down}, and the brake can be \textit{applied} or \textit{released}. When the pedal is \textit{up}, the brake is \textit{released}. When the pedal is \textit{down}, the brake is then \textit{applied}. The resulting Event-B specification for such model is represented in Figure \ref{fig:brake1} and \ref{fig:brake2}.
 \begin{figure}[H]
     \centering
     \frame{{\includegraphics[scale = 0.3]{images/eventb4.PNG} }}
@@ -110,13 +111,13 @@ A brake system (derived from the example presented in \cite{Aouadhi2017}) consis
     \caption{Machine of the brake example}
     \label{fig:brake2}
 \end{figure}
-The context identifier for this model is \textit{ctxBrakeSystem}, the set of set identifiers is $\bar{s} = \{pedalState, brakeState\}$ and the set of constants is $\bar{c} = \{up, down, applied, released \}$. The $pedalState$ carrier set contains the possible states of the pedal ($up$ or $down$) and the $brakeState$ carrier set contains the possible states of the brake ($applied$ or $released$). Both of these sets, are defined using the axioms $axm1$ and $axm2$. Therefore, the axioms of the brake model are defined by $A(\bar{s},\bar{c}) = axm1 \land axm2$. In particular, this context doesn't extend other components or uses theorems. 
+The context identifier for this model is \textit{ctxBrakeSystem}, the set of set identifiers is $\bar{s} = \{pedalState, brakeState\}$ and the set of constants is $\bar{c} = \{up, down, applied, released \}$. The $pedalState$ carrier set contains the possible states of the pedal ($up$ or $down$) and the $brakeState$ carrier set contains the possible states of the brake ($applied$ or $released$). Both of these sets, are defined using the axioms $axm1$ and $axm2$. Therefore, the axioms of the brake model are defined by $A(\bar{s},\bar{c}) = axm1 \land axm2$. This context does not extend other components or uses theorems. 
 
 For the model's machine, the machine identifier is \textit{abstractBrakeSystem} and it ``sees" the sets, constants and axioms in \textit{ctxBrakeSystem}. The set of variables in the brake model is defined as $\bar{v} = \{pedal, brake\}$. The $pedal$ variable represents the pedal's state and the $brake$ variable represents the brake's state. Invariants $inv1$ and $inv2$ define the domain for variables $pedal$ and $brake$ respectively, by assigning to each one of them their respective carrier set. The resulting invariant for the brake model is $I(\bar{v}) = inv1 \land inv2$. Each one of the events in the model represent a state transition and a system action:
 \begin{itemize}
     \item The \textit{INITIALISATION} determines the initial state of the system. In this case, the action $S(\bar{t}, \bar{v})$ of the \textit{INITIALISATION} event is defined by the two assignments $pedal := up$ and $brake := released$.
      
-    \item The \textit{PushPedal} event represents the action of pushing the pedal. The guard of the event $G(\bar{t}, \bar{v}) = grd1$ states that the pedal must be \textit{up}, to execute the action $S(\bar{t}, \bar{v}) = act1$. This action assigns the value \textit{down} to the \textit{pedal} variable. Conversely, the \textit{ReleasePedal} event verifies that the \textit{pedal} variable is \textit{down}, and changes its value to \textit{up} when executed.
+    \item The \textit{PushPedal} event represents the action of pushing the pedal. The guard of the event $G(\bar{t}, \bar{v}) = grd1$ checks that the pedal must be \textit{up}, to execute the action $S(\bar{t}, \bar{v}) = act1$. This action assigns the value \textit{down} to the \textit{pedal} variable. Conversely, the \textit{ReleasePedal} event verifies that the \textit{pedal} variable is \textit{down}, and changes its value to \textit{up} when executed.
     
     \item The \textit{ApplyBrake} event represents the action of applying the brake. The guard of the event $G(\bar{t}, \bar{v}) = grd1 \land grd2$ states that the pedal must be \textit{down} and the brake \textit{released}, to execute the action $S(\bar{t}, \bar{v}) = act1$. This action assigns the value \textit{applied} to the \textit{brake} variable. On the other hand, the \textit{ReleaseBrake} check for the opposite conditions ($pedal = up$ and $brake = applied$) and changes the value of the \textit{brake} variable to \textit{released}. 
 \end{itemize}
@@ -138,20 +139,20 @@ When an Event-B model is simulated or verified, there exists the possibility of 
 \section{Probabilistic Event-B}
 Based on the three different forms of non-determinism explained above, probabilistic Event-B \cite{Aouadhi2017} introduces probabilistic choices to replace non-deterministic ones in the following way:
 \begin{itemize}
-    \item \textbf{Probabilistic choice of enabled events:} To solve the non-determinisim, an expression $W_i(\bar{v})$ over the variables represents the \textit{weight} of a specific event $e_i$. Therefore, when multiple events are enabled, the probability of choosing one of them will be the ratio of its weight over the sum of all the weights of enabled events. This means that if there are $n$ enabled events, then the probability of choosing event $e_i$ is $P(e_i) = \frac{W(e_i)}{\sum^{n}_{j = 1}W(e_j)}$
+    \item \textbf{Probabilistic choice of enabled events:} To solve the non-determinisim, an expression $W_{e_i}(\bar{v})$ over the variables represents the \textit{weight} of a specific event $e_i$. Therefore, when multiple events are enabled, the probability of choosing one of them will be the ratio of its weight over the sum of all the weights of enabled events. This means that if there are $n$ enabled events, then the probability of choosing event $e_i$ is $P(e_i) = \frac{W_{e_i}(\bar{v})}{\sum^{n}_{j = 1}W(e_j)}$
     \item \textbf{Probabilistic choice of parameter values:} In order to choose a parameter value probabilistically, a discrete uniform distribution can be used as a default choice to assign probabilities to the parameters. For that reason, the probability of choosing a parameter valuation is $P(t_i) = \frac{1}{n}$ where $n$ is the number of parameter valuations that satisfy the guard of the event.
     \item \textbf{Predicate probabilistic assignment:} A predicate probabilistic assignment written as $x:\! \oplus \; Q(\bar{t}, \bar{v}, x, x')$ chooses the new value of $x$ with a uniform distribution. Hence, the probability of choosing a variable value $x'_i$ is $P(x'_i) = \frac{1}{n}$ where $n$ is the number of variable valuations that satisfy the predicate $Q(\bar{t}, \bar{v}, x, x')$. This probabilistic assignment replaces the non-deterministic predicate assignment. 
     \item \textbf{Enumerated probabilistic assignment:} A enumerated probabilistic assignment written as $x := E_1(\bar{t},\bar{v})@_{p_1}\oplus...\oplus E_n(\bar{t},\bar{v})@_{p_n}$  assigns a specific probability $p_i$ to each expression $E_i$, where $0 < p_i \leq 1$ and $p_1 + ... + p_n = 1$. This probabilistic assignment replaces the non-deterministic enumerated assignment.
 \end{itemize}
-Based on this changes, the new structure for probabilistic events can be defined as:
+The new structure for probabilistic events can be defined as:
 \begin{align*}
     e \; \equalhat \; \textbf{weight} \; W( \bar{v}) \; \textbf{any} \; \bar{t} \; \textbf{where} \; G(\bar{t}, \bar{v}) \; \textbf{then} \; S(\bar{t}, \bar{v}) \; \textbf{end} 
 \end{align*}
-Where $W( \bar{v})$ is an expression over the variables that determines the weight of the event, $\bar{t}$ is the set of parameters of the event, $G(\bar{t}, \bar{v})$ the guard of the event and $S(\bar{t}, \bar{v})$ is the \textit{probabilistic action}. The probabilistic action contains only deterministic assignments, predicate probabilistic assignments and enumerated probabilistic assignments. The resulting Machine for a probabilistic model is then $\mathscr{M} =(\bar{v}, I(\bar{v}), V(\bar{v}), PEvts, Init)$ where $PEvts$ is a set of probabilistic events and $Init$ is the initialization event ($Init$ must be a deterministic event). To exemplify probabilistic Event-B, let's consider an extension of the previously explained brake model. 
+Where $W( \bar{v})$ is an expression over the variables that determines the weight of the event, $\bar{t}$ is the set of parameters of the event, $G(\bar{t}, \bar{v})$ the guard of the event and $S(\bar{t}, \bar{v})$ is the \textit{probabilistic action}. The probabilistic action contains only deterministic assignments, predicate probabilistic assignments and enumerated probabilistic assignments. The resulting machine for a probabilistic model is then $\mathscr{M} =(\bar{v}, I(\bar{v}), V(\bar{v}), PEvts, Init)$ where $PEvts$ is a set of probabilistic events and $Init$ is the initialization event ($Init$ must be a deterministic event). To exemplify probabilistic Event-B, let's consider an extension of the previously explained brake model. 
 
 \begin{example}
 \normalfont
-This new example, presented also in \cite{Aouadhi2017}, adds new constraints:
+This new example, taken from \cite{Aouadhi2017}, adds new constraints:
 \begin{itemize}
     \itema Pedal failure: when the driver tries to switch “down” the pedal, it may stay in the same position.
     \itemb Risk of pedal failure: the risk of pedal failure is set to 10\%.
@@ -186,7 +187,7 @@ The resulting probabilistic model is depicted in Figure \ref{fig:brake3}. This n
 %Main sources for this chapter: PeterMaude, Lecture1, Lecture3
 
 %explain the generality of Maude
-Maude \cite{MaudeManual, PeterMaude, Lecture1} is a high performance declarative language, that allows the specification of programs or systems, and their formal verification.
+Maude \cite{MaudeManual, PeterMaude, Lecture1} is a high performance declarative language, that allows the specification of programs, dynamic systems or logics, and their verification.
 %explain how Maude program are written in functional module (sorts, subsorts, ops, etc, equations and equation evaluation)
 Maude's specifications are represented as \textit{functional modules} declared with syntax: \\
 \begin{maude}
@@ -194,7 +195,7 @@ fmod MODULENAME is
     BODY
 endfm
 \end{maude}
-where \textit{MODULENAME} is the name of the functional module, and \textit{BODY} is a set of declarations that specify the specification. The body of the module contains \textit{sorts} (written in Maude as \texttt{sorts}), where each sort correspond to a specific data type. It also contains a set of function symbols or function declarations called \textit{operators} (abbreviated as \texttt{op} in Maude), that specify the constructors of the different sorts, along with the syntax of the specification's functions. Finally, a set of \textit{equations} (abbreviated as \texttt{eq} in Maude) is used to define the behavior of the functions. These equations use \textit{variables} (abbreviated as \texttt{var} in Maude). 
+where \textit{MODULENAME} is the name of the functional module, and \textit{BODY} is a set of declarations that specify the specification. The body of the module contains \textit{sorts} (written in Maude as \texttt{sorts}), where each sort correspond to a specific data type. It also contains a set of function symbols or function declarations called \textit{operators} (abbreviated as \texttt{op} in Maude), that specify the constructors of the different sorts, along with the syntax of the specification's functions. Finally, a set of \textit{equations} (abbreviated as \texttt{eq} in Maude) is used to define the meaning of the functions. These equations use \textit{variables} (abbreviated as \texttt{var} in Maude). 
 
 %provide an example of a maude program functional module
 To illustrate how a Maude specification is contructed, the following code corresponds to a functional module that defines the natural numbers and the addition operation, borrowed from \cite{PeterMaude,Lecture1}: 
@@ -269,7 +270,7 @@ As an example, taken from \cite{Lecture1}, in the previous computation \texttt{r
 the resulting term rewriting is $t \rightarrow_{\vv{E}} t'$.
 %explain the functional modules with rewriting rules
 %explain theory behind it
-Aside from building specifications in Maude using functional modules, it is also possible to model concurrent systems. This is done with \textit{system modules}, which permits the construction of system states and transitions. Semantically, a system module is a \textit{rewrite theory} \cite{PeterMaude,Lecture3} $\mathscr{R} = (\Sigma, E, L, R)$ where: 
+Aside from building specifications in Maude using functional modules, it is also possible to model concurrent systems. This is done with \textit{system modules}, which permit the construction of system states and transitions. Semantically, a system module is a \textit{rewrite theory} \cite{PeterMaude,Lecture3} $\mathscr{R} = (\Sigma, E, L, R)$ where: 
 \begin{itemize}
     \item $(\Sigma, E)$ is an equational theory.
     \item $L$ is a set of labels.
@@ -297,7 +298,7 @@ To exemplify this, let's consider the following simple model of a bus.
 
 \begin{example}
 \normalfont
-A transport bus has capacity for 60 people. The bus can be moving or stationary, and can only drop or lift passengers when the bus is stationary. Finally, at any time the bus driver can use the brake to stop or use the gas pedal to move. The corresponding Maude system module for this model is:
+A transport bus has capacity for 60 people. The bus can be moving or stationary, and can only drop or lift passengers when the bus is stationary. Finally, at any time, the bus driver can use the brake to stop or use the gas pedal to move. The corresponding Maude system module for this model is:
 \\
 \begin{maude}
 mod BUS is protecting NAT .
@@ -327,7 +328,12 @@ In this model the states of the system are represented with instances of the sor
     \item An unconditional rule, labeled \texttt{drop}, that represents the event of dropping people off the bus. The subterm \texttt{s(N)} assures that it can only drop a person when the number of people inside the bus is one or more. This rule rewrites the state of the system, by reducing the number of passengers in the bus by one.
     \item A conditional rule, labeled \texttt{lift}, that represents the event of lifting a passenger. When this rule is applied, the number of passengers inside the bus is increased by one. To prevent exceeding the maximum capacity of the bus, the condition \texttt{if s(N) <= 60} is used. 
 \end{itemize}
-With this system module, that represents a rewrite theory $\mathscr{R}$, the simple bus model can be verified using other functionalities in Maude like model checking with the commands \texttt{rewrite} and \texttt{search}. The \texttt{rewrite} command or \texttt{rew} takes an initial state of the system and uses the rewriting rules until termination, i.e. until no other rewriting rule can be applied to the system state. In the case of the bus example, the rules \texttt{move} and \texttt{stop} can be applied infinitely. Therefore, to be able to simulate the system, Maude also allows to use bounded rewriting. With this method, it is possible to specify the number of rewriting rules to be applied to the initial state of the system. For example, the command \texttt{rew [3] bus(0, stationary) .} will apply 3 rewriting rules to the state \texttt{bus(0, stationary)}, which refers to a stationary bus with no passengers. The resulting execution is:
+With this system module, that represents a rewrite theory $\mathscr{R}$, the simple bus model can be verified using other functionalities in Maude like model checking with the commands \texttt{rewrite} and \texttt{search}. The \texttt{rewrite} command or \texttt{rew} takes an initial state of the system and uses the rewriting rules until termination, i.e. until no other rewriting rule can be applied to the system state. In the case of the bus example, the rules \texttt{move} and \texttt{stop} can be applied infinitely. Therefore, to be able to simulate the system, Maude also allows to use bounded rewriting. With this method, it is possible to specify the number of rewriting rules to be applied to the initial state of the system. For example, the command: 
+\begin{maude}
+
+rew [3] bus(0, stationary) .
+\end{maude}
+will apply 3 rewriting rules to the state \texttt{bus(0, stationary)}, which refers to a stationary bus with no passengers. The resulting execution is:
 \\
 \begin{maude2}
 *********** rule
@@ -348,7 +354,12 @@ bus(0, stationary)
 bus(1, stationary)
 result Bus: bus(1, stationary)
 \end{maude2}
-Lastly, with the \texttt{search} command it is possible to verify if a given state is reachable. For example, to check if the state \texttt{bus(10,stationary)} can be reached from the initial state \texttt{bus(0,moving)}, the command \texttt{search bus(0,stationary) =>* bus(10, moving) .}  can be used. The result of this command is:
+Lastly, with the \texttt{search} command it is possible to verify if a given state is reachable. For example, to check if the state \texttt{bus(10,stationary)} can be reached from the initial state \texttt{bus(0,moving)}, the command 
+\begin{maude}
+
+search bus(0,stationary) =>* bus(10, moving) .
+\end{maude}
+can be used. The result of this command is:
 '\\
 \begin{maude2}
 search in BUS : bus(0, stationary) =>* bus(10, moving) .
@@ -376,7 +387,7 @@ search in BUS : bus(0, stationary) =>*
                 X such that predicate(X) =/= true = true .
 No solution.
 \end{maude2}
-This means that the bus system can not exceed the maximum capacity of the bus.
+This means that the bus system cannot exceed the maximum capacity of the bus.
 
 
 \end{example}
@@ -448,7 +459,7 @@ mod BANK-ACCOUNT is
       (from A-002 to A-001 transfer 300) .
 endm
 \end{maude}
-The system consists of different bank accounts, that can transfer money to each other. The bank account class is named as \texttt{Account}, and it contains the attribute \texttt{bal} which corresponds to the amount of money available in an account. The message \texttt{from\_to\_transfer\_} simulates the transfer request from one account to another, by specifying the two account object identifiers or Oid (one for the account that sends the money and the other one for the account that receives the money) and the amount of money to be sent as an integer. The rewrite rule \texttt{transfer} matches a system configuration where the message \texttt{from A to B transfer M} and the two accounts with Oid \texttt{A} and \texttt{B} are present. After that, the rule modifies the attribute \texttt{bal} of both accounts according to the transaction parameters and erases the message from the configuration. For example, if the initial configuration of the system is the one defined by \texttt{bankConf}, the result after using the rewriting command \texttt{rew in BANK-ACCOUNT : bankConf .} would be:
+The system consists of different bank accounts, that can transfer money to each other. The \texttt{protecting} command is used to include the functional modules \texttt{INT} and \texttt{CONFIGURATION}, which include all the sorts, operators and equations defined in these modules, into the \texttt{BANK-ACCOUNT} system module. The bank account class is named as \texttt{Account}, and it contains the attribute \texttt{bal} which corresponds to the amount of money available in an account. The message \texttt{from\_to\_transfer\_} simulates the transfer request from one account to another, by specifying the two account object identifiers or Oid (one for the account that sends the money and the other one for the account that receives the money) and the amount of money to be sent as an integer. The rewrite rule \texttt{transfer} matches a system configuration where the message \texttt{from A to B transfer M} and the two accounts with Oid \texttt{A} and \texttt{B} are present. After that, the rule modifies the attribute \texttt{bal} of both accounts according to the transaction parameters and erases the message from the configuration. For example, if the initial configuration of the system is the one defined by \texttt{bankConf}, the result after using the rewriting command \texttt{rew in BANK-ACCOUNT : bankConf .} which rewrites the initial state using the rewriting rules until reaching a deadlock, would be:
 \\
 \begin{maude2}
 result Configuration: < A-001 : Account | bal : 550 > 
@@ -465,7 +476,7 @@ Probabilistic Maude or PMaude \cite{Agha2006}, is a Maude extension that introdu
     l &: t(\overrightarrow{x}) \rightarrow t'(\overrightarrow{x}, \overrightarrow{y}) \; \text{if} \; C(\overrightarrow{x}) \; \textbf{with probability} \; \overrightarrow{y} := \pi_r(\overrightarrow{y}) \\
     l' &: t(\overrightarrow{x}) \rightarrow t'(\overrightarrow{x}, \overrightarrow{y}) \; \textbf{with probability} \; \overrightarrow{y} := \pi_r(\overrightarrow{y})  
 \end{align*}
-Where $\overrightarrow{x}$ is the set of variables of the current model state,  $\overrightarrow{y}$ is the set of new variables accessible in the following model state and $C(\overrightarrow{x})$ is the conjunction of conditions over the set $\overrightarrow{x}$. Moreover, $l, l'$ are labels in $L$, $t,t'$ are terms written with $\Sigma$ and $\pi_r$ corresponds to the probability function assigned to the specific rule $r \in R$. 
+Where $\overrightarrow{x}$ is the set of variables of the model,  $\overrightarrow{y}$ is the set of new variables accessible in the following model state and $C(\overrightarrow{x})$ is the conjunction of conditions over the set $\overrightarrow{x}$. Moreover, $l, l'$ are labels in $L$, $t,t'$ are terms in the signature $\Sigma$ and $\pi_r$ corresponds to the probability function assigned to the specific rule $r \in R$. 
 %provide the clock example and explain it
 
 
@@ -506,7 +517,7 @@ pmod EXPONENTIAL-CLOCK is
   rl [reset]: clock(T,C) => clock(0.0,C) .
 endpm
 \end{maude}
-This model represents a clock that works with a battery. The idea is to model the behavior of the clock, when the battery starts depleting: when the charge of the battery is high, then the probability that the clock breaks is low. Conversely, when the clock's battery is low, the clock has a higher probability of breaking. In this probabilistic system module, the clock is represented as a term \texttt{clock(T,C)}, where \texttt{T} is the time and \texttt{C} is the clock's battery. The main probabilistic rewrite rule \texttt{advance} represents the ``ticks" of the clock. If the boolean value \texttt{B} is true, then the clocks ticks normally and the new time will be the current time \texttt{T} plus an increment \texttt{t}. Also, the charge of the clock will be reduced by a thousandth of the current's clock's charge. If \texttt{B} is false, then the clock will break and change to the state \texttt{broken(T,C - $\frac{\texttt{C}}{1000}$)}. The constructor \texttt{broken} of sort \texttt{Clock}, represents the broken state of the clock. To incorporate the probabilistic choice of event for the clock's state (either ticking or breaking), the value \texttt{B} is chosen probabilistically, based on the charge of the clock. This is done by the \texttt{BERNOULLI} function, which receives a float number and returns a boolean value that is distributed according to the Bernoulli distribution with mean $\frac{\texttt{C}}{1000}$. Therefore, the lesser the charge left in the battery, the greater is the probability that the clock will break. The value \texttt{t} is also probabilistically determined, in this case, by an exponential distribution function.
+This model represents a clock that works with a battery. The idea is to model the behavior of the clock, when the battery starts depleting: when the charge of the battery is high, then the probability that the clock breaks is low. Conversely, when the clock's battery is low, the clock has a higher probability of breaking. In this probabilistic system module, the clock is represented as a term \texttt{clock(T,C)}, where \texttt{T} is the time and \texttt{C} is the clock's battery. The main probabilistic rewrite rule \texttt{advance} represents the ``ticks" of the clock. If the boolean value \texttt{B} is true, then the clocks ticks normally and the new time will be the current time \texttt{T} plus an increment \texttt{t}. Also, the charge of the clock will be reduced by a thousandth of the current's clock's charge. If \texttt{B} is false, then the clock will break and move to the state \texttt{broken(T,C - $\frac{\texttt{C}}{1000}$)}. The constructor \texttt{broken} of sort \texttt{Clock} represents the broken state of the clock. To incorporate the probabilistic choice of event for the clock's state (either ticking or breaking), the value \texttt{B} is chosen probabilistically, based on the charge of the clock. This is done by the \texttt{BERNOULLI} function, which receives a float number and returns a boolean value that is distributed according to the Bernoulli distribution with mean $\frac{\texttt{C}}{1000}$. Therefore, the lesser the charge left in the battery, the greater is the probability that the clock will break. The value \texttt{t} is also probabilistically determined, in this case, by an exponential distribution function.
 There is also a second rewriting rule, that resets the clock to its initial state \texttt{clock(0.0, C)}. It is important to remark that this model has both probabilistic and non-deterministic choice: The state of the clock depends on a probability function but the choice of rewriting rules is done non-dereministically by Maude's fair scheduler.
 \end{example}
 
@@ -519,8 +530,8 @@ rl counter => N:Nat .
 that rewrites the constant counter to a natural number. The module is built to guarantee that every time the constant counter is replaced with a natural number \texttt{N}, this natural number corresponds to the successor of the natural number obtained in the previous use of the rule. The built-in \texttt{RANDOM} module provides a random number generator function, called \texttt{random}. Lastly, the \texttt{SAMPLER} module specifies the sampling functions for different probability functions. For example, for the previous clock example, the needed functions will be:
 \\
 \begin{maude}
-op EXPONENTIAL : PosReal => PosReal .
-op BERNOULLI : PosReal => Bool .
+op EXPONENTIAL : PosReal -> PosReal .
+op BERNOULLI : PosReal -> Bool .
 \end{maude}
 that are defined as:
 \\
@@ -567,7 +578,7 @@ VeStA \cite{Vesta} is a tool (implemented in Java) for statistical analysis of p
     \item Get the expected value of the temporal expressions specified in step 2.
 \end{enumerate}
 %explain how Quatex works
-The syntax of a QuaTEx expression is defined in Figure \ref{fig:multivesta}. The reader can find an in depth explanation of this syntax and how QuaTEx queries evaluate in \cite{Agha2006,multivesta}, but for now we will define a QuaTEx expression as the expected value of a temporal logic predicate over state observations that returns a real number. For example the QuaTEx expression \texttt{eval E[$PExp$]} returns the expected value of the real number returned by the temporal logic predicate $PExp$ (or also called \textit{path expression} in the syntax of QuaTEx).  
+The syntax of a QuaTEx expression is defined in Figure \ref{fig:multivesta}. The reader can find an in depth explanation of this syntax and how QuaTEx queries evaluate in \cite{Agha2006,multivesta}. For now we will define a QuaTEx expression as the expected value of a temporal logic predicate over state observations that returns a real number. For example the QuaTEx expression \texttt{eval E[$PExp$]} returns the expected value of the real number returned by the temporal logic predicate $PExp$ (or also called \textit{path expression} in the syntax of QuaTEx).  
 \begin{figure}[h]
     \centering
     \includegraphics[scale = 0.4]{images/quatex1.png}
@@ -575,14 +586,12 @@ The syntax of a QuaTEx expression is defined in Figure \ref{fig:multivesta}. The
     \label{fig:multivesta}
 \end{figure}
 
-Using the previous definition of QuaTEx queries, let's suppose that we want to find the expected value of a QuaTEx query \texttt{eval E[$PExp$]} using VeStA (we will refer to the expected value of the QuaTEx query obtained by VeStA as $\bar{x}$, and to the real expected value as $x$). To obtain $\bar{x}$, VeStA uses 2 user-defined parameters $\alpha$ and $\delta$. With these parameters, VeStA runs $n$ simulations, until $n$ is large enough to obtain a \textit{confidence interval} (CI) with probability $(1-\alpha) * 100\%$ bounded by $\delta$, i.e an interval $[\bar{x} - \frac{\delta}{2},\bar{x} + \frac{\delta}{2}]$ where the probability that $x \in [\bar{x} - \frac{\delta}{2},\bar{x} + \frac{\delta}{2}]$ is $(1-\alpha) * 100\%$. In other words, if VeStA calculates the expected value of a QuaTEx query as $\bar{x}$, then the probability that the real expected value of the query (represented as $x$) is in the interval $[\bar{x} - \frac{\delta}{2},\bar{x} + \frac{\delta}{2}]$, is $(1-\alpha) * 100\%$.
+Using the previous definition of QuaTEx queries, let's suppose that we want to find the expected value of a QuaTEx query \texttt{eval E[$PExp$]} using VeStA (we will refer to the expected value of the QuaTEx query obtained by VeStA as $\hat{x}$, and to the real expected value as $x$). To obtain $\hat{x}$, VeStA uses 2 user-defined parameters $\alpha$ and $\delta$. With these parameters, VeStA runs $n$ simulations, until $n$ is large enough to obtain a \textit{confidence interval} (CI) with probability $(1-\alpha) * 100\%$ bounded by $\delta$, i.e an interval $[\hat{x} - \frac{\delta}{2},\hat{x} + \frac{\delta}{2}]$ where the probability that $x \in [\hat{x} - \frac{\delta}{2},\hat{x} + \frac{\delta}{2}]$ is $(1-\alpha) * 100\%$. In other words, if VeStA calculates the expected value of a QuaTEx query as $\hat{x}$, then the probability that the real expected value of the query (represented as $x$) is in the interval $[\hat{x} - \frac{\delta}{2},\hat{x} + \frac{\delta}{2}]$, is $(1-\alpha) * 100\%$.
 
-VeStA and Quatex have also seen many upgrades during time. For example, the authors in \cite{AlTurki2011} present an extension of VeStA called PVeStA. This tool allows to run parallelized algorithms for statistical model checking using a client-server architecture. Furthermore \cite{multivesta} presents an extension of both VeStA and PVeStA called MultiVeStA, that extends the QuaTEx language to MultiQuaTEx, by allowing to query more state measures at a time. This improves the usability and the performance of the language. The extension also integrates existing discrete event simulators in addition to the originally supported ones, and improves the presentation of results. In Chapter 5, a detailed explanation on how to use MultiVeStA with PMaude specifications, will be given.
+VeStA and Quatex have also seen many upgrades during time. For example, the authors in \cite{AlTurki2011} present an extension of VeStA called PVeStA. This tool allows to run parallelized algorithms for statistical model checking using a client-server architecture. Furthermore \cite{multivesta} presents an extension of both VeStA and PVeStA called MultiVeStA, that extends the QuaTEx language to MultiQuaTEx, by allowing to query more state measures at a time. This improves the usability and the performance of the language. The extension also integrates existing discrete event simulators in addition to the originally supported ones, and improves the presentation of results, by including graphs of the results of the simulations. In Chapter 5, a detailed explanation on how to use MultiVeStA with PMaude specifications, will be given.
  
 
-To illustrate how statistical analysis of probabilistic rewrite theories specified in Pmaude works, the MultiVeStA tool will be used to run simulations over the clock model 
-
-specified in the previous section and verify properties over it. To do this, the steps to modify and run the clock example are:
+To illustrate how statistical analysis of probabilistic rewrite theories specified in Pmaude works, the MultiVeStA tool will be used to run simulations over the clock model specified in the previous section and verify properties over it. To do this, the steps to modify and run the clock example are:
 \begin{enumerate}
     \item Define the PMaude model's states as configurations using object-oriented programming in Maude and define the system transitions as rewriting rules between configurations.
     \item Implement a scheduler that chooses deterministically the event that is going to be executed.
@@ -615,7 +624,7 @@ rl [clockTick] :
       < cl : Clock  | time: T, battery: C, state: broken >
     fi .
 \end{maude}
-In this model, instead of having the exponential function to determine the time increment, it will be fixed to 1. Afterwards, it is necessary to implement the structures required by MultiVeStA to run the simulations. This structures control the simulation's time and schedules the following rules to be applied. Then, the state observations can be defined. These observations correspond to the \texttt{rval($i$)} predicate defined in \cite{Agha2006,multivesta}, and for this example three \texttt{rval} predicates are defined as:
+In this model, instead of having the exponential function to determine the time increment, to simplify the model it will be fixed to 1. Afterwards, it is necessary to implement the structures required by MultiVeStA to run the simulations. This structures control the simulation's time and schedules the following rules to be applied. Then, the state observations can be defined. These observations correspond to the \texttt{rval($i$)} predicate defined in \cite{Agha2006,multivesta}, and for this example three \texttt{rval} predicates are defined as:
 \begin{itemize}
     \item \texttt{s.rval("eTime")}: returns the time value of the clock in state $s$, as a float number.
     \item \texttt{s.rval("eBattery")}: returns the battery level of the clock in state $s$.
@@ -634,7 +643,7 @@ PBattery() = if ( s.rval("isBrk") == 1.0 )
              then s.rval("eBattery") else # PBattery() fi ;
 eval E[ PBattery() ] ;
 \end{maude2}
-The first formula states that the if the clock is broken (i.e. \texttt{s.rval("isBrk") == 1.0}) then return the current time of the clock (i.e. \texttt{s.rval("eTime")}). If not, the query recursively calls itself in the following system state (i.e. \texttt{\# PTime()}). The other query has the same behavior as the previous one, but instead of \texttt{s.rval("eTime")} is \texttt{s.rval("eBattery")}. Therefore, the answer returned by the first query corresponds to the expected value of the clock's time when it breaks, and the answer returned by the second query is the expected value of the clock's battery when it breaks. Once the simulations are executed with the clock probabilistic model, both MultiQuaTEx formulas and parameters $\alpha = 0.05$ and $\delta = 1$, the obtained results for both queries were:
+The first formula states that if the clock is broken (i.e. \texttt{s.rval("isBrk") == 1.0}) then the current time of the clock is returned (i.e. \texttt{s.rval("eTime")}). If not, the query calls itself in the following system state (i.e. \texttt{\# PTime()}). The other query has the same behavior as the previous one, but instead of \texttt{s.rval("eTime")} is \texttt{s.rval("eBattery")}. Therefore, the answer returned by the first query corresponds to the expected value of the clock's time when it breaks, and the answer returned by the second query is the expected value of the clock's battery when it breaks. Once the simulations are executed with the clock probabilistic model, the two MultiQuaTEx formulas, and parameters $\alpha = 0.05$ and $\delta = 1$, the obtained results for both queries were:
 \begin{table}[H]
 \centering
 \begin{tabular}{|l|l|l|l|}

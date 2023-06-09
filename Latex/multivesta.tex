@@ -2,41 +2,40 @@
 
 As mentioned before, MultiVeStA is an extension of both VeStA and PVeStA that can be used to perform statistical model checking of PMaude specifications. Hence, the main purpose of this chapter is to present a general introduction to understand how MultiVeStA works, and how it can be used to verify PMaude specifications, obtained with the encoding from the previous chapter.
 
-\section{MultiVeSta's components and processes}
-First and foremost, the MultiVeSta tool was developed by Andrea Vandin, and it is available to download in a public repository in GitHub \cite{multiGit}. The main components of the tool are:
+\section{MultiVeStA's components and processes}
+First and foremost, the MultiVeStA tool was developed by Andrea Vandin, and it is available to download in a public repository in GitHub \cite{multiGit}. The main components of the tool are:
 \begin{itemize}
-    \item \textbf{Maude-3.0+yices2:} A folder that contains the Maude distribution.
+    \item \textbf{Maude-3.0+yices2:} A folder that contains the Maude distribution used by the tool. It is important to note, that MultiVeStA is not integrated with Maude. It only uses this folder to run the simulations.
     \item \textbf{apmaude.maude:} A Maude file that contains the necessary sorts, equations and rules to extend any PMaude specification, so it can be checked using the tool. 
     \item \textbf{multivesta.jar:} A java executable that runs the simulations using the specified PMaude model, the MultiQuaTEx query, and the simulation parameters.
 \end{itemize}
 
-To run simulations of a specific PMaude specification, it is necessary to pass to the tool:
+To run simulations of a specific PMaude specification, it is necessary to define:
 
 \begin{itemize}
-    \item \textbf{model.maude:} A Maude file, that contains the specification of the PMaude model that is going to be verified.
+    \item \textbf{model.maude:} A Maude file that contains the specification of the PMaude model to be verified.
     \item \textbf{query.multiquatex:} A MultiQuaTEx file, with the quantitative temporal logic formula written in the MultiQuaTEx language, that will be used to verify the model.
     \item \textbf{Simulations Parameters:} There are multiple parameters to take into account when performing simulations with the tool:
     \begin{itemize}
-        \item $\alpha$ and $\delta$, already explained in section 2.7.
+        \item $\alpha$ and $\delta$, already explained in Section 2.7.
         \item $bs$, which defines the number of simulations that each batch will contain (this parameter will be further detailed in the current section).
     \end{itemize}
 \end{itemize}
-With these components, it is then possible to run the simulations and obtain the results of the query, as seen in Figure \ref{fig:multi1}.
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[scale = 0.5]{images/multi1.png}
     \caption{MultiVeSta's components}
     \label{fig:multi1}
 \end{figure}
-The way MultiVeStA obtains these simulation results, can be defined in the following steps:
+With these components, it is then possible to run the simulations and obtain the results of the query, as seen in Figure \ref{fig:multi1}. The way MultiVeStA obtains these simulation results can be defined in the following steps:
 \begin{enumerate}
     \item MultiVeStA performs $bs$ number of simulations and calculates the confidence interval based on the results obtained in each one of the simulations. Each simulation consists of:
         \begin{enumerate}
             \item Get the initial state of the system $s_0$ by running \textit{model.maude}, which includes the theory specified in \textit{apmaude.maude}, using the \textit{Maude-3.0+yices2} distribution.
-            \item Evaluate the MultiQuaTEx formula in \textit{query.multiquatex} over $s_0$. If the formula is satisfied, then the simulation ends and the result of the query is returned. Otherwise, MultiVeStA performs one step in the simulation, to get the next state $s_i$.
-            \item Repeat step b with the new state $s_i$, until reaching a state where the formula is satisfied and the results are returned. 
+            \item Evaluate the MultiQuaTEx formula in \textit{query.multiquatex} over $s_0$. If the formula evaluates to true, then the simulation ends and the result of the query is returned. Otherwise, MultiVeStA performs one step in the simulation, to get the next state $s_i$.
+            \item Repeat step b with the new state $s_i$, until reaching a state where the formula is true and the results are returned. 
         \end{enumerate}
-    As shown in section 2.7, the result of a MultiQuaTEx formula is a floating point value. Therefore, with each one of the values returned by the query in each simulation, the confidence interval of the batch is calculated.
+    As shown in Section 2.7, the result of a MultiQuaTEx formula is a floating point value. Therefore, with each one of the values returned by the query in each simulation, the confidence interval of the batch is calculated.
     
     \item If the confidence interval satisfies the parameter $\alpha$ and $\delta$ i.e. the real value of the query $x$ has a probability $(1-\alpha)*100\%$ of being in the interval $[\bar{x} - \frac{\delta}{2},\bar{x} + \frac{\delta}{2}]$, where $\bar{x}$ is the current value calculated for the query using the simulations, then MultiVeStA returns the results and ends it execution. If not, then MultiVeStA will send another batch of simulations until the confidence interval is finally reached.
 \end{enumerate}
@@ -48,7 +47,7 @@ In general, the complete process can be viewed in the following flowchart:
     \label{fig:multi3}
 \end{figure}
 
-Having understood how the general process to perform simulations in MultiVeStA is done, it is necessary to define how to modify a PMaude specification to be able to run it with the tool. To do this, in the next section a general explanation will be given that illustrates how individual simulations work (sub-steps a, b and c from the step 1), and how this can be achieved by including new elements into the PMaude models that are going to be verified.
+Having understood how the general process to perform simulations in MultiVeStA is done, it is necessary to define how to modify a PMaude specification to be able to run it with the tool. To do this, in the next section, a general explanation will be given that illustrates how individual simulations work (sub-steps a, b and c from the step 1), and how this can be achieved by including new elements into the PMaude models that are going to be verified.
 
 \section{MultiVeStA and Maude interaction}
 The way MultiVeStA sends and retrieves information from Maude, is through the Maude console. Initially, MultiVeStA loads the apmaude.maude and model.maude file through the Maude console. Then, MultiVeStA sends commands to the Maude console and Maude executes these commads. Finally, MultiVeStA reads these results from the Maude's console and use them to calculate the results of the simulations. This process is captured in the following sequence diagram:
@@ -62,11 +61,11 @@ The way MultiVeStA sends and retrieves information from Maude, is through the Ma
 
 In order to fully detail the process specified in Figure \ref{fig:multi4}, it is necessary to define some preliminary operators and equations contained in apmaude.maude and model.maude. Hence, the following list contains the description of these structures and their respective definitions:
 \begin{itemize}
-    \item \textbf{Scheduler:} the scheduler is a structure that contains the current number of steps or transitions in the simulation, represented as a float number, and a list of scheduler elements. In Maude it is specified as:
+    \item \textbf{Scheduler:} the scheduler is a structure that contains the current number of steps or transitions in the simulation, represented as a float number, and a list of scheduler elements. In Maude this is specified as:
     \begin{maude}
 
 op {_|_} : Float ScheduleList -> Scheduler . \end{maude}
-    Each one of the scheduler elements corresponds to a pair that contains a message that identifies the next rewriting rule to be applied, and a float number that specifies in which step of the simulation the rule is going to be applied. They also contain a third value, which is a natural number that is used as a flag to drop or keep scheduler elements when inserted (this will be explained in more detail in the \texttt{insert} equation). In Maude it is defined as:
+    Each one of the scheduler elements corresponds to a pair that contains a message that identifies the next rewriting rule to be applied, and a float number that specifies in which step of the simulation the rule is going to be applied. They also contain a third value, which is a natural number that is used as a flag to drop or keep scheduler elements when inserted (this will be explained in more detail in the \texttt{insert} equation). In Maude this is defined as:
     \begin{maude}
     
 op [_,_,_] : Float Msg Nat -> ScheduleElem [ ctor ] .
@@ -81,7 +80,7 @@ eq [ t1 , M1 ] = [ t1 , M1 , 0] . \end{maude}
     
 subsort Scheduler < Configuration . \end{maude}
     
-    The scheduler is a very important part of the simulation process, since it will be in charged of determining the next transition or rewriting rule to be applied to the model's current configuration during a simulation. Associated to the scheduler, there is an operator named \texttt{insert}, that allows to insert new elements in the scheduler list. It is defined as:
+    The scheduler is a very important part of the simulation process, since it will be in charge of determining the next transition or rewriting rule to be applied to the model's current configuration during a simulation. Associated to the scheduler, there is an operator named \texttt{insert}, that allows to insert new elements in the scheduler list. This is defined as:
     \begin{maude}
     
 op insert : Scheduler ScheduleElem -> Scheduler .
@@ -103,15 +102,15 @@ eq insert([ t1 , M1 , p] ; SL , [ t2 , M2 , 0]) =
    fi . \end{maude}
     What this equation does is to take a scheduler, a scheduler element, and insert the element inside the list of the scheduler according to the float number in the scheduler elements, like a priority queue. In the end, the first element in the list is going to contain the message that specifies the next rule to be executed, since it has the smallest step. If the value of the flag is 1, then the element is not inserted, but if it is 0, then the element is inserted.  
         
-    Moreover, the scheduler induces an implicit constraint over the model specified in model.maude: the selection of the next rule to be applied must be deterministic, in the sense that in every state of the simulation the next rule must be pre-selected, instead of the non-deterministic mechanism for choosing rules in Maude. For this reason, model.maude must have a rule or equation that chooses the next rule during the simulations. 
+    Moreover, the scheduler induces an implicit constraint over the model specified in model.maude: the selection of the next rule to be applied must be deterministic, in the sense that in every state of the simulation, the next rule must be pre-selected, instead of the non-deterministic mechanism for choosing rules in Maude. For this reason, model.maude must have a rule or equation that chooses the next rule during the simulations. 
 
-    \item \textbf{Random Counter:} the random counter is a structure that contains a natural number, that will be used to select random numbers, similar to the \texttt{COUNTER} module explained in section 2.6. The reason for not using the \texttt{COUNTER} module in MultiVeStA and using a structure that saves the value of the counter, is because during simulation MultiVeStA resets the Maude console. Therefore, if the \texttt{COUNTER} module is used, the value of the counter to select random numbers will always be 0. With every application of a rule, the idea is to change the number of the random counter, so the generated random numbers are different in every simulation step. In Maude, the random counter is defined as:
+    \item \textbf{Random Counter:} the random counter is a structure that contains a natural number, that will be used to select random numbers, similar to the \texttt{COUNTER} module explained in Section 2.6. The reason for not using the \texttt{COUNTER} module in MultiVeStA and using a structure that saves the value of the counter, is because during simulation MultiVeStA resets the Maude console. Therefore, if the \texttt{COUNTER} module is used, the value of the counter to select random numbers will always be 0. With every application of a rule, the idea is to change the number of the random counter, so the generated random numbers are different in every simulation step. In Maude, the random counter is defined as:
     \begin{maude}
 
 op randomCounter : Nat -> Object [ ctor ] . \end{maude}
-    The random counter has sort \texttt{Object} since it is also part of the system states.
+    The random counter has sort \texttt{Object} since it is also part of the system state.
 
-    \item \textbf{States of the Simulation:} as defined in section 2.4, states of a Maude specification are represented with a term. In this case, the states in the simulations have sort \texttt{Configuration} and are defined as:
+    \item \textbf{States of the Simulation:} as defined in Section 2.4, states of a Maude specification are represented with a term. In this case, the states in the simulations have sort \texttt{Configuration} and are defined as:
     \begin{maude}
 
 var gt : Float .
@@ -144,15 +143,15 @@ var M1 : Msg .
 eq tick( sc C ) = mytick(sc) C .
 eq mytick({ gt | [ t1 , M1 , p] ; SL }) = M1 { t1 | SL } .
 eq mytick({ gt | nilSL }) = { gt | nilSL } . \end{maude}
-    its main purpose is to take out the first element from the scheduler list, add the message inside the scheduler element (i.e. \texttt{M1}) to the current state of the simulation, and replace \texttt{gt} with the step inside the scheduler element (i.e. \texttt{t1}).  
+    The purpose of this operator is to take out the first element from the scheduler list, add the message inside the scheduler element (i.e. \texttt{M1}) to the current state of the simulation, and replace \texttt{gt} with the step inside the scheduler element (i.e. \texttt{t1}).  
  
     \item\textbf{Initial State:} as the name suggests it, this term corresponds to the initial state of the system. It is defined as:
     \begin{maude}
 
 op init : -> Configuration .
 op initState : -> Configuration .
-eq initState = closeWorldExceptScheduler(init) [ owise ] \end{maude}
-    For the initial state there are two operators involved: \texttt{init} and \texttt{initState}. \texttt{init} is a constant of sort \texttt{Configuration}, that will have to be defined by the user in the model.maude file with the equation:
+eq initState = closeWorldExceptScheduler(init) \end{maude}
+    For the initial state there are two operators involved: \texttt{init} and \texttt{initState}. \texttt{init} is a constant of sort \texttt{Configuration}, that must be defined by the user in the model.maude file with the equation:
     \begin{maude}
 
 eq init = {0.0 | nilSL} C0 randomCounter(0). \end{maude}
@@ -165,19 +164,19 @@ eq closeWorldExceptScheduler(sc C) = sc { C } .\end{maude}
     
 \item \textbf{Scheduler Rule:} Continuing with the observation made about the scheduler, a rule $SR$ will be defined inside model.maude, that is in charge of selecting the next rule that is going to be applied to the current system state. For that reason, the $SR$ rule must insert in the scheduler list the scheduler element that has the message that represents the rule chosen by the $SR$ rule.
 
-\item \textbf{Rule Associated to a Message:} Each one of the scheduler elements contains a message \texttt{Mi} that is going to be used to identify the next rule that is going to be executed. Therefore, the associated rule must consider in its definition the presence of the message \texttt{Mi}. Based on this, the rule $R_{M_i}$ can be defined as the rule associated with the message \texttt{Mi}, and specified as:
+\item \textbf{Rule Associated to a Message:} Each one of the scheduler elements contains a message \texttt{Mi} that will be used to identify the next rule that is going to be executed. Therefore, the associated rule must consider in its definition the presence of the message \texttt{Mi}. Based on this, the rule $R_{M_i}$ can be defined as the rule associated with the message \texttt{Mi}, and specified as:
 \begin{maude}
 
 rl : Mi {gt | SL} {C randomCounter(n)} =>
         {gt | SL} {C' randomCounter(n)} .\end{maude}
 The rule eliminates the message from the configuration and changes the term \texttt{C} to \texttt{C'}, indicating that the rule has been applied, and the state of the system has been changed.
 
-\item \textbf{Val operator:} This operator is used to define observations over the states of the system, allowing to extract valuable information that can be then evaluated in the MultiQuaTEx query using the \texttt{s.rval()} function, explained in section 2.7. It is defined as:
+\item \textbf{Val operator:} This operator is used to define observations over the states of the system, allowing to extract valuable information that can be then evaluated in the MultiQuaTEx query using the \texttt{s.rval()} function, explained in Section 2.7. It is defined as:
 \begin{maude}
 
 op val : Nat Configuration -> Float .
 op val : String Configuration -> Float . \end{maude}
-Where the natural number and the string serve as identifiers, and the configuration represents the state where the observation is going to be made. For example, recall the state observation \texttt{s.rval("isBrk")} in the clock example from section 2.7. For MultiVeStA to be able to get the value for \texttt{s.rval("isBrk")} when evaluating the MultiQuaTEx query, the user must define in model.maude the corresponding equation with the \texttt{val} operator and the same identifier, in this case \texttt{"isBrk"}. The resulting equation in the model.maude files is:
+Where the natural number and the string serve as identifiers, and the configuration represents the state where the observation is going to be made. For example, recall the state observation \texttt{s.rval("isBrk")} in the clock example from Section 2.7. For MultiVeStA to be able to get the value for \texttt{s.rval("isBrk")} when evaluating the MultiQuaTEx query, the user must define in model.maude the corresponding equation with the \texttt{val} operator and the same identifier, in this case \texttt{"isBrk"}. The resulting equation in the model.maude files is:
 \begin{maude}
 
 var C : Configuration .
@@ -194,7 +193,7 @@ eq isBroken(< cl : Clock | state: working, attrSet > C) = 0.0 .
 --- Eval if the clock is broken
 eq val("isBrk", {gt | SL} {C randomCounter(n)}) = isBroken(C) .\end{maude}
 
-It is also important to mention, that ther are two predefined state observations in MultiVeStA, which are \texttt{s.rval("steps")} and \texttt{s.rval("time")}. The former returns the number of ticks done in the simulation, and the latter returns the value \texttt{gt} of the scheduler \texttt{\{gt | SL\}}.
+It is also important to mention, that there are two predefined state observations in MultiVeStA, which are \texttt{s.rval("steps")} and \texttt{s.rval("time")}. The former returns the number of ticks done in the simulation, and the latter returns the value \texttt{gt} of the scheduler \texttt{\{gt | SL\}}.
 \end{itemize}
 
 Having defined the preliminary structures used in the simulations, the complete process of a single simulation will be described in detail as a series of steps:
@@ -211,7 +210,7 @@ eq val("obs1", {gt | SL} {C randomCounter(n)}) = ...
 eq val("obs2", {gt | SL} {C randomCounter(n)}) = ...
 ...
 eq val("obsn", {gt | SL} {C randomCounter(n)}) = ...\end{maude}
-    inside model.maude.
+    in model.maude.
     \item MultiVeStA loads the apmaude.maude and the model.maude files to Maude, using the Maude console.
     \item MultiVeStA sends the command \texttt{rew initState}. 
     \begin{enumerate}
@@ -231,7 +230,7 @@ insert({0.0 | nilSL },[ 0.0 + 1.0 , Mi]) $\rightarrow$ {0.0 | [1.0 , Mi] }
 {C0 randomCounter(0+1)}                     {C0 randomCounter(1)}\end{maude}
     \end{enumerate}
 
-\item MultiVeStA reads the Maude console and saves the current configuration. The saved configuration will be defined as \texttt{Conf}.
+\item MultiVeStA reads the Maude console and saves the current configuration. The saved configuration will be named as \texttt{Conf}.
 
 \item MultiVeStA evaluates the query in query.multiquatex, using the user defined equations for the \texttt{val} operators, to calculate the \texttt{s.rval()} state observations. To do this, for every \texttt{s.rval("obs")} in the query, MultiVeStA sends to Maude the command \texttt{red val("obs", Conf)}, and obtains the float number returned by the equation. Using these results of the \texttt{val} equations, then MultiVeStA is able to evaluate the query.
 
@@ -267,7 +266,7 @@ insert({gt' | nilSL},[gt' + 1.0 , Mj]) $\rightarrow$ {gt' | [gt' + 1.0 , Mj]}
     
     \item If the query is satisfied, then get the float number returned by the query. If not, then repeat steps 6 trough 8 over the previous configuration \texttt{Conf}, until the formula is satisfied.
 \end{enumerate}
-The complete process can be visualized in a sequence diagram, that extends the previous one presented in figure \ref{fig:multi4}:
+The complete process can be visualized in a sequence diagram in Figure \ref{fig:multi5}, that extends the previous one presented in Figure \ref{fig:multi4}:
 
 \begin{figure}[H]
     \centering
@@ -276,7 +275,7 @@ The complete process can be visualized in a sequence diagram, that extends the p
     \label{fig:multi5}
 \end{figure}
 
-Based on this introduction to MultiVeStA and chapter 3, the next section will present the integration between the rewriting logic approach to probabilistic Event-B and MultiVeStA.
+Based on this introduction to MultiVeStA and Chapter 3, the next section will present the integration between the rewriting logic approach to probabilistic Event-B and MultiVeStA.
 
 \section{Using MultiVeStA to verify $\mathscr{R}_\mathscr{M}$}
 
@@ -287,9 +286,9 @@ To verify properties of probabilistic Event-B models encoded as probabilistic re
     \caption{Interaction between the encoded model and MultiVeStA}
     \label{fig:multi6}
 \end{figure}
-Even though the simulation process is the same, as described in Figures \ref{fig:multi3} and \ref{fig:multi5}, it is important to consider and identify the differences that arise when the simulation of the encoded models is done. Hence, the rest of this section will specify and describe how the same series of steps explained in section 4.2, function with the specific case of probabilistic rewrite theories $\mathscr{R}_\mathscr{M}$. Initially, the following list contains the required definitions to understand the simulation process:
+Even though the simulation process is the same, as described in Figures \ref{fig:multi3} and \ref{fig:multi5}, it is important to consider and identify the differences that arise when the simulation of the encoded models is done. Hence, the rest of this section will specify and describe how the same series of steps explained in Section 4.2, also works with the specific case of probabilistic rewrite theories $\mathscr{R}_\mathscr{M}$. Initially, the following list contains the required definitions to understand the simulation process:
 \begin{itemize}
-    \item \textbf{States of the Simulation in $\mathscr{R}_\mathscr{M}$:} Given that the general definition for a state of a model that is going to be verified with MultiVeStA is:
+    \item \textbf{States of the Simulation in $\mathscr{R}_\mathscr{M}$:} Given that the general definition for a state of a model, that can be verified with MultiVeStA is:
     \begin{maude}
 
 {gt | SL} {C randomCounter(n)}\end{maude}
@@ -303,12 +302,12 @@ Even though the simulation process is the same, as described in Figures \ref{fig
 
 eq init = {0.0 | nilSL} $\mathfrak{C} \ \mathfrak{M}_{0}  \ \mathfrak{E}$ randomCounter(0) .\end{maude}
     
-    \item \textbf{Messages in $\mathscr{R}_\mathscr{M}$:} The messages that identify the next rule to be applied, are defined for the translated models $\mathscr{R}_\mathscr{M}$ with the operator:
+    \item \textbf{Messages in $\mathscr{R}_\mathscr{M}$:} The messages that identify the next rule to be applied are defined for the translated models $\mathscr{R}_\mathscr{M}$ with the operator:
     \begin{maude}
 
 op _<-_ : Oid Content -> Msg .\end{maude}
     
-    where the \texttt{Oid} is the object identifier of the machine $\mathfrak{M}$, and the second parameter of sort \texttt{Content} is used to identify the rule that is going to be applied. For example for the brake system example explained in section 2.3 and chapter 3, the message that identifies the push pedal rule in the model would be:
+    where the \texttt{Oid} is the object identifier of the machine $\mathfrak{M}$, and the second parameter of sort \texttt{Content} is used to identify the rule to be applied. For example for the brake system example explained in Section 2.3 and Chapter 3, the message that identifies the push pedal rule in the model would be:
     \begin{maude}
 
 op RulePushPedal : -> Content [ ctor ] .
@@ -334,9 +333,9 @@ eq scheduleEvent( { gt | SL }
                   {$\mathfrak{C} \ \mathfrak{M}_{i} $ 
                   < events  : Events  | state: ( ev(ruleQid, execute) ) > 
                   randomCounter(n)} .\end{maude}
-    where \texttt{MNAME} is object identifier of the machine $\mathfrak{M}_{i}$, \texttt{ruleQid} is the quoted identifier of the selected rule, and \texttt{qidToContent} is an equation that maps the \texttt{Qid} of every rule, to a term of sort \texttt{Content}.
+    where \texttt{MNAME} is the object identifier of the machine $\mathfrak{M}_{i}$, \texttt{ruleQid} is the quoted identifier of the selected rule, and \texttt{qidToContent} is an equation that maps the \texttt{Qid} of every rule, to a term of sort \texttt{Content}.
 
-    \item \textbf{Rule $R_{M_i}$ in $\mathscr{R}_\mathscr{M}$}: the $execEvt_{e_i}$ rule in $\mathscr{R}_\mathscr{M}$, corresponds to the $R_{M_i}$ rule. To adapt each one of the rules $execEvt_{e_i}$ to resemble the behavior of $R_{M_i}$, it is necessary to include in the definition of $execEvt_{e_i}$, the message that represents the event. For example, if the rule $execEvt_{e_i}$ is defined as:
+    \item \textbf{Rule $R_{M_i}$ in $\mathscr{R}_\mathscr{M}$}: the $execEvt_{e_i}$ rule in $\mathscr{R}_\mathscr{M}$, corresponds to the $R_{M_i}$ rule. To adapt each one of the rules $execEvt_{e_i}$ to emulate the behavior of $R_{M_i}$, it is necessary to include in the definition of $execEvt_{e_i}$, the message that represents the event. For example, if the rule $execEvt_{e_i}$ is defined as:
     \begin{maude}
 
 rl [eventEi]: { gt | SL } $\mathfrak{C} \ \mathfrak{M}_{i}  \ \mathfrak{E}$ randomCounter(n)
@@ -437,7 +436,7 @@ scheduleEvent({gt' | nilSL }  $\rightarrow$   {gt' | [gt' + 1.0 , $MG$]}
     
     \item If the query is satisfied, then get the float number returned by the query. If not, then repeat steps 4 trough 6 over the previous configuration \texttt{Conf}, until the formula is satisfied.
 \end{enumerate}
-Following this process, it is then possible to do statistical model checking over $\mathscr{R}_\mathscr{M}$ rewrite theories, and evaluate MultiQuaTEx queries. In the next section, some case studies will be presented to illustrate the interplay between the encoder and MultiVeStA.
+Following this process, it is then possible to do statistical model checking over $\mathscr{R}_\mathscr{M}$ rewrite theories, and evaluate MultiQuaTEx queries. In the next section, some case studies will be presented to illustrate the interplay between the translation process from probabilistic Event-B to PMaude, and MultiVeStA.
 
 
 

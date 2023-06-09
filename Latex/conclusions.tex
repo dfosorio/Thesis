@@ -6,15 +6,15 @@ In order to contribute to probabilistic Event-B, it is necessary to think of new
 
 \end{comment}
 
-In the end, the current work provided a functional implementation that integrates the probabilisitic Event-B to PMaude encoder, known as EventB2Maude, with the statistical model checking tool MultiVeStA, documented in chapter 4. On top of that, this same chapter contains a detailed and formalized explanation of the observed behavior and functionality of the MultiVeStA tool, which can serve as a starting point for future integrations of PMaude models with MultiVeStA.    
+This work provided a functional implementation that integrates the probabilisitic Event-B to PMaude translation process, known as EventB2Maude, with the statistical model checking tool MultiVeStA, documented in Chapter 4. On top of that, this same chapter contains a detailed explanation of the observed behavior and functionality of the MultiVeStA tool, which can serve as a starting point for future integrations of PMaude models with MultiVeStA.    
 
-Moreover, as part of this work, the necessary background to understand the mentioned encoding process was covered and synthesize in the preliminaries chapter. Additionally, the encoding was also explained and documented in chapter 3, detailing further the explanation given in \cite{Olarte}. Therefore, this work may serve as a introductory and self contained guide, to understand the theoretical background and the technicalities of the previously mentioned article.
+Moreover, as part of this work, the necessary background to understand the mentioned encoding process was covered and synthesize in the preliminaries chapter. Additionally, the encoding was also explained and documented in Chapter 3, detailing further the explanation given in \cite{Olarte}. Therefore, this work may serve as a introductory and self contained guide, to understand the theoretical background and the technicalities of the previously mentioned article.
 
-Lastly, by implementing different case studies, it was possible to demonstrate the functionality of MultiVeStA and the encoder, by obtaining simulation results that match the real expected values of the MultiQuaTEx queries. Unfortunately, it is important to note that there exists some difficulties with the current state of the integration:
+Lastly, by implementing different case studies, it was possible to demonstrate the functionality of MultiVeStA and the EventB2Maude tool, by obtaining simulation results that match the real expected values of the MultiQuaTEx queries. Unfortunately, it is important to note that there exists some difficulties with the current state of the integration:
 \begin{itemize}
-    \item As the reader might have noticed in the verification results using the MultiVeStA tool, the time to reach the desired confidence interval might take too long, when the required confidence interval determined by the $\delta$ parameter is difficult to obtain. For example, a value of $\delta = 0.01$ proved to be challenging in terms of time for some of the simulations, specially for the bounded re-transmission protocol. For the moment, there is not a concrete explanation for the large amount of time it takes to verify this particular model, but it seems to be related to the large number of events that are executed in each simulation.
+    \item As the reader might have noticed in the verification results using the MultiVeStA tool, the time to reach the desired confidence interval might take too long, when the required confidence interval determined by the $\delta$ parameter is difficult to obtain. For example, a value of $\delta = 0.01$ proved to be challenging in terms of time for some of the simulations, specially for the bounded re-transmission protocol. For the moment, we do not have a concrete explanation for the large amount of time it takes to verify this particular model, but it seems to be related to the large number of events that are executed in each simulation.
     
-    \item Related with the previous point, if more decimal precision is needed for the obtained value of the MultiQuaTEx query, then the $\delta$ parameter must be decreased. Thus, having a decimal precision for more than three decimal places implies a $\delta < 0.01$, which translates into a large amount of simulation time in the current condition of the tool.
+    \item Related with the previous point, if more decimal precision is needed for the obtained value of the MultiQuaTEx query, then the $\delta$ parameter must be decreased. Thus, having a decimal precision for more than three decimal places implies a $\delta < 0.01$, which translates into a large amount of simulation time in the current condition of the tool, using only one thread for execution, i.e. no parallelism, and the value $\alpha = 0.01$.
 
     \item For the time being, there is not a satisfactory answer that explains why in some cases the confidence interval reaches the \texttt{NaN} value and stops the simulations. Nevertheless, the answer for the specific query can be obtained from the result of the previous batch of simulations.
 \end{itemize}
@@ -23,7 +23,9 @@ Regarding future work, there are multiple things that can be done:
 \begin{itemize}
     \item Investigate and understand why in some of the simulations the value of the confidence interval reaches the \texttt{NaN} value.
     \item Find ways to reduce the overall simulation time when the model has many system transitions or the value for the confidence interval is difficult to reach, due to the $\delta$ parameter.
-    \item Program a more user friendly user interface that allows to make translations of probabilistic Event-B models and verification with MultiVeStA with more ease.
-    \item Extend the EventB2Maude tool to allow the specification of more elements of the Event-B language.
+    \item Implement a more user friendly user interface that allows to make translations of probabilistic Event-B models and verification with MultiVeStA with more ease.
+    \item Extend the EventB2Maude tool to allow the specification of more elements of the Event-B language, like the machine invariants or context axioms, defined with first order logic. 
     \item Implement the EventB2Maude tool as a functional Rodin plug in.
+    \item Explore how the model checking tool in Maude can be used to check the deterministic part of the translated Event-B models.
+    \item Use MultiVeStA's option for using parallelism to run simulations on multiple threads, and verify if the simulation time is substantially reduced.
 \end{itemize}

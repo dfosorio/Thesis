@@ -1,29 +1,42 @@
 \chapter{A Rewriting Logic Semantics for Probabilistic Event-B}
-The rewriting logic approach to probabilistic Event-B \cite{Olarte}, introduces a method for translating probabilistic Event-B models to PMaude models that are executable in PVeStA. Formally speaking, it is a map $\llbracket \cdot \rrbracket: (\mathscr{C}, \mathscr{M}) \rightarrow \mathscr{R}_\mathscr{M}$ from a probabilistic event model to a rewrite theory. There are two main steps for this transformation:
+The rewriting logic approach to probabilistic Event-B \cite{Olarte}, introduces a method for translating probabilistic Event-B models to PMaude models that are executable in PVeStA. Formally speaking, it is a map $\llbracket \cdot \rrbracket: (\mathscr{C}, \mathscr{M}) \rightarrow \mathscr{R}_\mathscr{M}$ from a probabilistic Event-B model to a rewrite theory. There are two main steps for this transformation:
 
 \begin{enumerate}
     \item Specify a rewrite theory $\mathscr{R}$ to encode the static parts of the model, i.e. the context and the initialization of the machine.
     \item Then, $\mathscr{R}$ is extended with equations and rewrite rules that correspond to the events in the machine $\mathscr{M}$.
 \end{enumerate}
 
+Before explaining how the map $\llbracket \cdot \rrbracket$ works, it is necessary to define the elements that the probabilistic Event-B model must have:
+\begin{itemize}
+    \item Inside the context, deferred sets and constants can be defined, but properties specified as theorems or axioms using first order logic are not currently supported.
+    \item In the machine, the invariant clause is only used to define the type of the variables. It is not possible to define properties as theorems or invariants using first order logic.
+    \item To define the weight of the events, an expression is used. These expressions can be arithmetic, boolean, and operations over sets or relations.
+    \item The parameter of the event must have a finite domain, which is specified by a set expression or interval of numerical values.
+    \item Event guards must be boolean expressions, that can use other kind of operations (arithmetic, boolean or set operations).
+    \item There are two types of assignments: deterministic assignments that correspond to the usual assigment of an expression to a variable, or probabilistic assignments that correspond to enumerated probabilistic assignment. Other types of probabilistic assignments are not supported. 
+\end{itemize}
+For more information, the reader can refer to the \cite{tool.website}, to review the accepted grammar for the translation process, in more detail. 
+
 The rewrite theory $\mathscr{R}$ works as a framework that allows to represent each one of the Event-B's elements inside Maude. To explore the implementation of it, the reader can refer to \cite{tool.website}, where the rewrite theory is specified with multiple Maude system modules in the folder named as \texttt{m-theory}. For the sake of simplicity, a general definition of $\mathscr{R}$ will be given.
 
-$\mathscr{R}$ consists of four Maude system modules: \texttt{SAMPLER}, \texttt{EB-CORE}, \texttt{EBCONTEXT}, and \texttt{EBMACHINE}. \texttt{SAMPLER} contains the definition of functions for probabilistic sampling. \texttt{EB-CORE} functions as a prelude, that contains definitions for the representation of basic Event-B constructs such as elements, sets, relations, and operations on them. \texttt{EBCONTEXT} defines the structure to encode Event-B's contexts in Maude and \texttt{EBMACHINE} does the same for Event-B's machines. The way these modules interact, is represented in Figure \ref{fig:E2M1}. 
+$\mathscr{R}$ consists of four Maude system modules: \texttt{SAMPLER}, \texttt{EB-CORE}, \texttt{EBCONTEXT}, and \texttt{EBMA-} \texttt{CHINE}. \texttt{SAMPLER} contains the definition of functions for probabilistic sampling. \texttt{EB-CORE} functions as a prelude, that contains definitions for the representation of basic Event-B constructs such as elements, sets, relations, and operations on them. \texttt{EBCONTEXT} defines the structure to encode Event-B's contexts in Maude and \texttt{EBMACHINE} does the same for Event-B's machines. The way these modules interact, is represented in Figure \ref{fig:E2M1}. 
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[scale = 0.5]{images/E2M1.png}
     \caption{Interaction between system modules}
     \label{fig:E2M1}
 \end{figure}
 
-The figure shows that the \texttt{EBMACHINE} module includes the \texttt{EBCONTEXT} module, \texttt{EBCONTEXT} includes \texttt{EB-CORE}, and \texttt{EB-CORE} includes  \texttt{SAMPLER}. When the translation of an Event-B model is done, the resulting specification includes the equations and rewrite rules necessary to extend $\mathscr{R}$ into $\mathscr{R}_\mathscr{M}$. Therefore, the system module that represents the translated Event-B model, must include the \texttt{EBMACHINE} module, which also includes all the other mentioned modules. In the end, the interaction between these modules, represent the rewrite theory $\mathscr{R}_\mathscr{M}$, as seen in the Figure \ref{fig:E2M2}.
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \includegraphics[scale = 0.5]{images/E2M2.png}
     \caption{Interaction between $\mathscr{R}$ and the translated model}
     \label{fig:E2M2}
 \end{figure}
+
+The figure shows that the \texttt{EBMACHINE} module includes the \texttt{EBCONTEXT} module, \texttt{EBCONTEXT} includes \texttt{EB-CORE}, and \texttt{EB-CORE} includes  \texttt{SAMPLER}. When the translation of an Event-B model is done, the resulting specification includes the equations and rewrite rules necessary to extend $\mathscr{R}$ into $\mathscr{R}_\mathscr{M}$. Therefore, the system module that represents the translated Event-B model, must include the \texttt{EBMACHINE} module, which also includes all the other mentioned modules. In the end, the interaction between these modules, represent the rewrite theory $\mathscr{R}_\mathscr{M}$, as seen in the Figure \ref{fig:E2M2}.
+
 Using this framework for representing Event-B models in Maude, it is possible to define the complete encoding $\llbracket \cdot \rrbracket$. To guide the reader through the complete encoding, the example of the probabilistic brake system in section 2.3, Figure \ref{fig:brake3}, will be used. For the following sections, a \textit{map} will be defined as a set of pairs of the form $(x_1 \mapsto y_1, x_2 \mapsto y_2, ... , x_n \mapsto y_n)$
 
 \section{Encoding Contexts}
@@ -62,11 +75,11 @@ Where $\llbracket \mathscr{M} \rrbracket_{id}$ encodes the machine's identifier 
 
 \begin{itemize}
     \item $\llbracket \mathscr{M} \rrbracket_{id}$ returns the identifier of the machine as a a quoted identifier. In the brake model, $\llbracket \mathscr{M} \rrbracket_{id} = $\texttt{'BrakeSystem}.
-    \item $\llbracket \mathscr{M} \rrbracket_{initVars}$ returns a map of quoted identifiers, that represent the names of the variables, with a term of sort \texttt{EBType}, that represent the values of the variables. For example, in the brake model the variable \textit{pedal} and its value in the initial state, are represented by the pair \texttt{'pedal |-> val(elt("up"))}.
+    \item $\llbracket \mathscr{M} \rrbracket_{initVars}$ returns a map of quoted identifiers, that represent the names of the variables, with a term of sort \texttt{EBType}, that represent the values of the variables. For example, in the brake model, the variable \textit{pedal} and its value in the initial state are represented by the pair \texttt{'pedal |-> val(elt("up"))}.
 \end{itemize}
 
 \section{Events' States in Maude}
-In order to simulate the behavior of probabilistic Event-B in Maude, it is necessary to have a probabilistic method to choose the next event that is going to be executed during simulation. To do this, it is necessary to define a structure that contains the states of the events in each system configuration. These possible event's states are:
+In order to simulate the behavior of probabilistic Event-B models in Maude, it is necessary to have a probabilistic method to choose the next event that is going to be executed during simulation. To do this, it is necessary to define a structure that contains the states of the events in each system configuration. These possible event's states are:
 \begin{itemize}
     \item \textbf{\textit{unknown}:} the event's guards have not been evaluated.
     \item \textbf{\textit{enabled(n)}:} the event's guard is true with weight $n$.
@@ -79,7 +92,7 @@ Let $\mathscr{M}$ be a probabilistic machine. The corresponding encoding of the 
     \begin{align*}
     & \langle \ events : Events \ | \ state :  \llbracket \mathscr{M} \rrbracket_{initEvtSt}  \ \rangle
     \end{align*}
-Where $\llbracket \mathscr{M} \rrbracket_{initEvtSt}$ encodes the initialization of the event's states. The resulting term has sort \texttt{CONFIGURATION}, and represents an object of the class \texttt{Events}, with attribute \texttt{state}. $\llbracket \mathscr{M} \rrbracket_{initEvtSt}$ returns a set $ev(evt_1,st_1), ..., ev(evt_n,st_n)$ where each $evt_i$ is a quoted identifier that represents the name of the event, and $st_i$ is a term of sort \texttt{EvState}, that represents the state of the event. In this case, all of the $st_i = \texttt{unknown}$ , since in the initialization of the model none of the guards of the events have been evaluated. For the brake system, the resulting term after the encoding would be:
+Where $\llbracket \mathscr{M} \rrbracket_{initEvtSt}$ encodes the initialization of the event's states. The resulting term has sort \texttt{CONFIGURATION}, and represents an object of the class \texttt{Events}, with attribute \texttt{state}. $\llbracket \mathscr{M} \rrbracket_{initEvtSt}$ returns a set $ev(evt_1,st_1), ..., ev(evt_n,st_n)$ where each $evt_i$ is a quoted identifier that represents the name of the event, and $st_i$ is a term of sort \texttt{EvState}, that represents the state of the event. In this case, all of the terms $st_i$ is equal to $unknown$ ($st_i = \texttt{unknown}$) , since in the initialization of the model none of the guards of the events have been evaluated. For the brake system, the resulting term after the encoding would be:
 \begin{maude}
 
 < events : Events | state: (ev('PushPedal, unknown) 
@@ -90,7 +103,7 @@ Where $\llbracket \mathscr{M} \rrbracket_{initEvtSt}$ encodes the initialization
 \end{maude}
 
 \section{Initial State and System States in Maude}
-As seen in the preliminaries chapter, the states of the specification of a system in Maude, are represented using terms. For the translated models from probabilistic Event-B models, the initial system state of the system is:
+As seen in chapter 2, the states of the specification of a system in Maude, are represented using terms. For the translated models from probabilistic Event-B models, the initial system state of the system is:
 \begin{align*}
         &\langle \ \llbracket \mathscr{C} \rrbracket_{id} : Context \ | \ sets: \llbracket \mathscr{C} \rrbracket_{sets} , \ constants: \llbracket \mathscr{C} \rrbracket_{constants} \ \rangle \\
         & \langle \ \llbracket \mathscr{M} \rrbracket_{id} : Machine \ | \ variables: \llbracket \mathscr{M} \rrbracket_{initVars} \ \rangle \\
@@ -103,12 +116,12 @@ This term has sort \texttt{CONFIGURATION}, and combines the previously explained
 Where $\mathfrak{C}$ is the term that represents the context, $\mathfrak{M}_{0}$ is the term that represents the machine in the initial state, and $\mathfrak{E}$ is the term that represents the events' states in the current system configuration. The rest of the system states, are symbolized with $\mathfrak{C} \ \mathfrak{M}_{i}  \ \mathfrak{E}$, and are obtained with the application of equations and rewrite rules, defined in $\mathscr{R}_\mathscr{M}$,  over the initial state $\mathfrak{C} \ \mathfrak{M}_{0}  \ \mathfrak{E}$. With these elements, the definition of the rewrite theory $\mathscr{R}$ is concluded. The following sections provide the definition of the equations and rewrite rules that define $\mathscr{R}_\mathscr{M}$.
 
 \section{$evalSt$ Equation}
-The $evalSt$ equation, determines if an event is enabled or blocked, given the current state of the machine $\mathfrak{M}_i$ and the encoding of the guards of the event $e_i$, represented as $\llbracket \mathscr{M} \rrbracket^{e_i}_{guards}$ :
+The $evalSt$ equation, determines if an event is enabled or blocked, given the current state of the machine $\mathfrak{M}_i$, and the encoding of the guards of the event $e_i$, represented as $\llbracket \mathscr{M} \rrbracket^{e_i}_{guards}$:
 \begin{align*}
     &\mathfrak{C} \ \mathfrak{M}_{i} \ \langle events : Events \ | \ state: ev(e_1,unknown) ... ev(e_n, unknown) \rangle = \\
     &\mathfrak{C} \ \mathfrak{M}_{i} \ \langle events : Events \ | \ state: ev(e_1, eval(\mathfrak{M}_i, \llbracket \mathscr{M} \rrbracket^{e_1}_{guards})) ... ev(e_n, eval(\mathfrak{M}, \llbracket \mathscr{M} \rrbracket^{e_n}_{guards})) \rangle
 \end{align*}
-To do this, for each one of the event states $ev(evt_1,st_1), ..., ev(evt_n,st_n)$, the equation evaluates the new state of the event $e_i$ with the equation $eval$. The equation takes as input the current state of the machine $\mathfrak{M}_i$, i.e. the value of each one of the variables, and then determines if the guards of event $e_i$ are satisfied, using the encoded version of the guards  $\llbracket \mathscr{M} \rrbracket^{e_n}_{guards}$. The returned value by $eval$, can only be \texttt{enabled(n)}, if the guards of the event are satisfied in $\mathfrak{M}_i$, or \texttt{blocked} otherwise. For example, if $evalSt$ is applied to the first state $\mathfrak{C} \ \mathfrak{M}_{0}  \ \mathfrak{E}$, the obtained term is:
+To do this, for each one of the event states $ev(evt_1,st_1), ..., ev(evt_n,st_n)$, the equation evaluates the new state of the event $e_i$ with the equation $eval$. The equation takes as input the current state of the machine $\mathfrak{M}_i$, i.e. the value of each one of the variables, and then determines if the guards of event $e_i$ are satisfied, using the encoded version of the guards  $\llbracket \mathscr{M} \rrbracket^{e_n}_{guards}$. The returned value by $eval$ can only be \texttt{enabled(n)}, where \texttt{n} corresponds to the weight of the event, if the guards of the event are satisfied in $\mathfrak{M}_i$, or \texttt{blocked} otherwise. For example, if $evalSt$ is applied to the first state $\mathfrak{C} \ \mathfrak{M}_{0}  \ \mathfrak{E}$, the obtained term is:
 \begin{maude}
 
 $\mathfrak{C}$ $\mathfrak{M}_0$ < events : Events | state: (ev('PushPedal, enable(10)) 
@@ -146,7 +159,7 @@ The resulting term with the highest probability is:
 
 $\mathfrak{C} \ \mathfrak{M}_i$ <events : Events | state : ev('ReleasePedal, execute)>
 \end{maude}
-Since the \textit{ReleasePedal} event has the biggest weight.
+Since in this specific state, the \textit{ReleasePedal} event has the biggest weight. In other system states, the weights of the enabled events are not going to be the same, thus the behavior of the rule will be different.
 
 \section{$execEvt_{e_i}$ Rule}
 For each one of the events $e_i$ in the original probabilistic Event-B model, a rule $execEvt_{e_i}$ is encoded. It is defined as: 
@@ -185,7 +198,7 @@ Using all the previously explained elements of the rewrite theory $\mathscr{R}_\
     \begin{align*}
         \llbracket \cdot \rrbracket: (\mathscr{C}, \mathscr{M}) \rightarrow \mathscr{R}_\mathscr{M}
     \end{align*}
-    \item The system is initialized with term $\mathfrak{C \ M_0 \ E}$ inside $\mathscr{R}_\mathscr{M}$:
+    \item The system is initialized with term $\mathfrak{C \ M_0 \ E}$ in $\mathscr{R}_\mathscr{M}$:
     \begin{align*}
         \mathfrak{C \ M_0 \ E}
     \end{align*}
@@ -193,15 +206,15 @@ Using all the previously explained elements of the rewrite theory $\mathscr{R}_\
     \begin{align*}
         \mathfrak{C \ M_i} \ \langle state: ev(e_1,unknown) ... ev(e_n, unknown) \rangle \xrightarrow{evalSt} \mathfrak{C \ M_i} \ \langle state: ev(e_1,st_1) ... ev(e_n, st_n) \rangle
     \end{align*}
-    \item The blocked events are filtered and the next event is chosen probabilistically from all the enabled events, based on the event's weights:
+    \item The blocked events are filtered out and the next event is chosen probabilistically from all the enabled events, based on the event's weights:
     \begin{align*}
         \mathfrak{C \ M_i} \ \langle state: ev(e_1,st_1) ... ev(e_n, st_n) \rangle \xrightarrow{chooseEvt} \mathfrak{C \ M_i} \ \langle state: ev(e_i,execute) \rangle
     \end{align*}
-    \item The rule associated to the encoded version of the chosen event $e_i$ in the previous step is executed. The resulting change of the variable values, is captured in the rewrite $\mathfrak{M_i} \rightarrow \mathfrak{M_j}$. Moreover, the states of the events are initialized again. 
+    \item The rule associated to the encoded version of the chosen event $e_i$ in the previous step is executed. The resulting change of the variable values, is captured in the rewrite $\mathfrak{M_i} \xrightarrow{execEvt_{e_i}} \mathfrak{M_j}$. Moreover, the states of the events are initialized again. 
     \begin{align*}
         \mathfrak{C \ M_i} \ \langle state: ev(e_i,execute) \rangle \xrightarrow{execEvt_{e_i}} \mathfrak{C \ M_j} \ \langle state: ev(e_1,unknown) ... ev(e_n, unknown) \rangle
     \end{align*}
-    \item Repeat steps 3,4 and 5 until deadlock (i.e. none of the events can be executed since the guards of the events are unsatisfiable), or until the rule $execEvt_{e_i}$ has been executed a fixed number of times (this value is represented as a constant named \texttt{MAX-STEPS} inside $\mathscr{R}_\mathscr{M}$).
+    \item Repeat steps 3, 4 and 5 until deadlock (i.e. none of the events can be executed since the guards of the events are unsatisfiable), or until the rule $execEvt_{e_i}$ has been executed a fixed number of times (this value is represented as a constant named \texttt{MAX-STEPS} in $\mathscr{R}_\mathscr{M}$).
 \end{enumerate}
 Based on the presented encoding, it is possible to prove that the resulting rewrite theory $\mathscr{R}_\mathscr{M}$ is semantically correct, based on the probabilistic Event-B model $(\mathscr{C}, \mathscr{M})$:
 
